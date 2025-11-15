@@ -1,0 +1,65 @@
+﻿@page "/login"
+@rendermode InteractiveServer
+
+@using EzeePdf.Core
+@using EzeePdf.Core.Model.Users
+
+@using System.Security.Claims
+@using EzeePdf.Services
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Server.Circuits
+
+@inject IUserService userService;
+@inject NavigationManager navigationManager;
+@inject IJSRuntime jsRuntime
+
+<EditForm Model="@model" OnValidSubmit="Authenticate" FormName="LoginForm">
+    <DataAnnotationsValidator />
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Email" HelperText="Email Address"
+                                  @bind-Value="model!.EmailAddress" For="@(() => model!.EmailAddress)" />
+                    <MudTextField Label="Password" HelperText="Password" Class="mt-3"
+                                  @bind-Value="model!.Password" For="@(() => model!.Password)" InputType="InputType.Password" />
+                </MudCardContent>
+                <MudText Typo="Typo.body2" Color="Color.Error" Align="Align.Center">
+                    <span>@errorMessage</span>.
+                </MudText>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">LOGIN</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+
+@code {
+
+    [SupplyParameterFromForm]
+    public LoginRequestDto model { get; set; } = new LoginRequestDto();
+
+    private string? errorMessage;
+
+    private async Task Authenticate()
+    {
+        var login = model.Adapt<LoginRequest>();
+        var response = await userService.Login(login);
+        if (response.Success)
+        {
+            navigationManager.NavigateTo($"/postlogin?Token={response.Response}");
+        }
+        else
+        {
+            errorMessage = response.ErrorMessage;
+        }
+    }
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        model.SourceDevice = await jsRuntime.InvokeAsync<string>("eval", "navigator.userAgent");
+    }
+}

@@ -1,0 +1,83 @@
+﻿@page "/feedback"
+
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using EzeePdf.Core
+@using EzeePdf.Core.Model.Feedback
+@using EzeePdf.DTO.Feedback
+@using MudBlazor
+
+@inject ISnackbar snackbar
+@inject IFeedbackService feedbackService
+@inject IJSRuntime jsRuntime
+
+<MudPaper Class="d-flex justify-center align-center" Style="height:calc(100vh - 70px);">
+    <MudGrid>
+        <MudItem xs="3" />
+        <MudItem xs="6">
+            <MudCard Class="p-6" Style="border: solid 0.5px #D0D0D0;">
+                <MudCardContent>
+                    <MudText Typo="Typo.h5" Class="mb-4 text-center">Feedback Form</MudText>
+                    <EditForm Model="@feedbackModel" OnValidSubmit="HandleValidSubmit" FormName="FeedbackForm">
+                        <DataAnnotationsValidator />
+
+                        <MudTextField Label="Your feedback"
+                                      MaxLength="@Constants.FEEDBACK_MAX_LENGTH"
+                                      Lines="5"
+                                      @bind-Value="feedbackModel!.FeedbackText"
+                                      For="@(() => feedbackModel!.FeedbackText)" />
+
+                        <MudText Typo="Typo.body2" Align="Align.Right">
+                            @($"{feedbackModel!.FeedbackText?.Length ?? 0}/{Constants.FEEDBACK_MAX_LENGTH}")
+                        </MudText>
+
+                        <MudTextField Label="Email"
+                                      MaxLength="255"
+                                      @bind-Value="feedbackModel!.EmailAddress"
+                                      For="@(() => feedbackModel!.EmailAddress)" />
+
+                        <MudStack Class="mt-6">
+                            <MudButton Variant="Variant.Filled" Color="Color.Default" ButtonType="ButtonType.Submit">Submit</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@Cancel">Cancel</MudButton>
+                        </MudStack>
+
+                    </EditForm>
+
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="3" />
+    </MudGrid>
+</MudPaper>
+
+@code {
+    private FeedbackDto feedbackModel = new();
+    private string? sourceDevice;
+
+    private async void HandleValidSubmit()
+    {
+        feedbackModel.SourceDevice = sourceDevice;
+        var response = await feedbackService.SaveFeedback(feedbackModel.Adapt<UserFeedback>());
+
+        if (response.Success)
+        {
+            snackbar.Add("Feedback saved successfully!", Severity.Success);
+            feedbackModel = new();
+            StateHasChanged();
+        }
+        else
+        {
+            snackbar.Add(response!.ErrorMessage ?? "Error saving feedback", Severity.Error);
+        }
+    }
+    private void Cancel()
+    {
+        feedbackModel = new(); 
+    }
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        sourceDevice = await jsRuntime.InvokeAsync<string>("eval", "navigator.userAgent");
+    }
+}

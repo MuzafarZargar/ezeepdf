@@ -1,0 +1,195 @@
+﻿@page "/edit-pdf"
+@using EzeePdf.Core
+@using EzeePdf.Core.Extensions
+@using EzeePdf.Core.Responses
+@rendermode InteractiveServer
+
+@inject IPdfUsageService pdfUsageService;
+@inject ISettingsService settingsService
+@inject ISnackbar snackbar
+@inject IJSRuntime jsRuntime;
+
+<PageTitle>PDF Annotations</PageTitle>
+
+<MudGrid>
+    <MudItem xs="1">
+        <MudPaper Class="pa-2" Style="height:calc(100vh - 70px); display: flex; flex-direction: column; align-items: center;">
+            <MudFileUpload T="IBrowserFile"
+                           Disabled="@downloadLimitReached"
+                           FilesChanged="OnPdfFileSelected"
+                           MaximumFileCount="1" Accept=".pdf">
+                <ActivatorContent>
+                    <MudTooltip Text="@downloadLimitReachedPdfMessage">
+                        <MudIconButton Variant="Variant.Filled"
+                                       Color="Color.Default"
+                                       Icon="@Icons.Material.Outlined.PictureAsPdf">
+                        </MudIconButton>
+                    </MudTooltip>
+                </ActivatorContent>
+            </MudFileUpload>
+            <br />
+            <MudTooltip Text="Download">
+                <MudIconButton Variant="Variant.Filled"
+                               Color="Color.Default"
+                               OnClick="OnSaveWatermark"
+                               Disabled="@(documentLoaded==false || errorMessage is not null)"
+                               Icon="@Icons.Material.Filled.Download">
+                </MudIconButton>
+            </MudTooltip>
+
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="11">
+        <SfPdfViewer2 @ref="@Viewer"
+                      EnableFormFields="false"
+                      EnablePrint="false"
+                      EnableFormDesigner="false"
+                      EnableDownload="@documentLoaded"
+                      DownloadFileName="newfile.pdf"
+                      Height="100%"
+                      Width="100%">
+            <PdfViewerEvents DocumentLoaded="DocumentLoaded">
+            </PdfViewerEvents>
+            <PdfViewerUnderlineSettings AllowedInteractions="@underlineAllowedInteractions" />
+
+        </SfPdfViewer2>
+    </MudItem>
+
+</MudGrid>
+
+
+@code {
+    private SfPdfViewer2? Viewer;
+    private string? sourceDevice;
+    private long pdfSize;
+    private long allowedPdfSize;
+    private long allowedPageCount;
+    private bool documentLoaded;
+    private string? errorMessage;
+    private bool downloadLimitReached;
+    private string? downloadLimitReachedPdfMessage = "Select PDF";
+
+    private List<AllowedInteraction> underlineAllowedInteractions = [
+            AllowedInteraction.Select,
+            AllowedInteraction.Move,
+            AllowedInteraction.Resize,
+            AllowedInteraction.Delete
+    ];
+
+    private async Task OnPdfFileSelected(IBrowserFile e)
+    {
+        await AddUpload(e.Size, e.Name);
+
+        await Viewer!.UnloadAsync();
+        errorMessage = null;
+        documentLoaded = false;
+        if (e.Size > allowedPdfSize)
+        {
+            errorMessage = $"Pdf file size ({e.Size.BytesToMb()} KB) exceeded allowed value: {allowedPdfSize.BytesToMb()} MB";
+            snackbar.Add(errorMessage, Severity.Error);
+            await Viewer!.UnloadAsync();
+        }
+        else
+        {
+            pdfSize = e.Size;
+            using var stream = e.OpenReadStream(maxAllowedSize: allowedPdfSize);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var bytes = ms.ToArray();
+            await Viewer!.LoadAsync(bytes);
+        }
+    }
+    private async Task AddUpload(long size, string? fileName)
+    {
+        var response = await pdfUsageService.AddUpload(null,
+                    Core.Enums.EnumPdfFunction.Watermark,
+                    sourceDevice,
+                    size,
+                    fileName);
+
+        if (response.Code == EnumResponseCode.DailyUploadLimitReached)
+        {
+            downloadLimitReached = true;
+            downloadLimitReachedPdfMessage = response.ErrorMessage;
+            snackbar.Add(downloadLimitReachedPdfMessage!, Severity.Error);
+            StateHasChanged();
+        }
+    }
+    private async void OnSaveWatermark(MouseEventArgs args)
+    {
+        var doc = await Viewer!.GetDocumentAsync();
+        var response = await pdfUsageService.SaveUsage(null,
+                        Core.Enums.EnumPdfFunction.Editing,
+                        sourceDevice,
+                        Viewer!.PageCount,
+                        pdfSize,
+                        doc.Length);
+
+        // var annotations = await Viewer.GetAnnotationsAsync();
+        // await Viewer!.DeleteAnnotationsAsync(annotations);
+        // foreach (var a in annotations)
+        // {
+        //     a.Thickness = 100;
+        //     if (a.Type == AnnotationType.Underline)
+        //     {
+        //         a.Color = "#FFF";
+        //         var b = a.Bound;
+        //         a.Bound = new Bound
+        //         {
+        //             Y = b.Y + 10,
+        //             Top = b.Top + 10,
+        //             Bottom = b.Bottom + 10,
+
+        //             X = b.X,
+        //             Left = b.Left,
+        //             Right = b.Right,
+        //             Height = 200,
+        //             Width = b.Width + 50
+        //         };
+        //     }
+        // }
+        if (response.Success)
+        {
+            await Viewer!.DownloadAsync();
+        }
+        else
+        {
+            snackbar.Add(response.ErrorMessage!, Severity.Error);
+        }
+    }
+
+    private async void DocumentLoaded(LoadEventArgs e)
+    {
+        if (Viewer!.PageCount > allowedPageCount)
+        {
+            documentLoaded = false;
+            errorMessage = $"Pdf file page count ({Viewer.PageCount}) exceeded allowed value: {allowedPageCount}";
+            snackbar.Add(errorMessage, Severity.Error);
+            await Viewer!.UnloadAsync();
+        }
+        else
+        {
+            documentLoaded = true;
+        }
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            allowedPdfSize = await settingsService.PdfMaxPdfFileSize();
+            allowedPageCount = await settingsService.MaxAllowedPageCount();
+            sourceDevice = await jsRuntime.InvokeAsync<string>("eval", "navigator.userAgent");
+            var downloadReached = await pdfUsageService.DailyLimitReached();
+            if (downloadReached.Code == EnumResponseCode.DailyUploadLimitReached)
+            {
+                downloadLimitReached = true;
+                downloadLimitReachedPdfMessage = downloadReached.ErrorMessage;
+                snackbar.Add(downloadLimitReachedPdfMessage!, Severity.Error);
+                StateHasChanged();
+            }
+        }
+    }
+}

@@ -1,0 +1,61 @@
+﻿@page "/register"
+
+@rendermode InteractiveServer
+
+@using EzeePdf.Core.Model.Users
+
+@inject IUserService userService;
+@inject NavigationManager navigationManager;
+@inject ISnackbar snackbar;
+
+<EditForm Model="@model" OnValidSubmit="RegisterUser" FormName="RegisterForm">
+    <DataAnnotationsValidator />
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="First Name" HelperText="First Name"
+                                  @bind-Value="model!.FirstName" For="@(() => model!.FirstName)" />
+                    <MudTextField Label="Last Name" HelperText="Last Name"
+                                  @bind-Value="model!.LastName" For="@(() => model!.LastName)" />
+                    <MudTextField Label="Email" HelperText="Email Address"
+                                  @bind-Value="model!.EmailAddress" For="@(() => model!.EmailAddress)" />
+                    <MudTextField Label="Password" HelperText="Password" Class="mt-3"
+                                  @bind-Value="model!.Password1" For="@(() => model!.Password1)" InputType="InputType.Password" />
+                    <MudTextField Label="Confirm Password" HelperText="Confirm Password" Class="mt-3"
+                                  @bind-Value="model!.Password2" For="@(() => model!.Password2)" InputType="InputType.Password" />
+                </MudCardContent>
+                <MudText Typo="Typo.body2" Color="Color.Error" Align="Align.Left">
+                    <span>@errorMessage</span>.
+                </MudText>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">LOGIN</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+    </MudGrid>
+</EditForm>
+
+@code {
+
+    [SupplyParameterFromForm]
+    public NewUserDto model { get; set; } = new NewUserDto();
+
+    private string? errorMessage;
+
+    private async Task RegisterUser()
+    {
+        var user = model.Adapt<NewUser>();
+        var response = await userService.CreateUser(user);
+        if (response.Success)
+        {
+            snackbar.Add("Registration successful!", Severity.Success);
+            navigationManager.NavigateTo("/login");
+        }
+        else
+        {
+            errorMessage = response.ErrorMessage;
+        }
+    }
+}

@@ -1,0 +1,376 @@
+﻿@page "/watermark"
+
+@rendermode InteractiveServer
+
+@using EzeePdf.Core
+@using EzeePdf.Core.Extensions
+@using EzeePdf.Core.Responses
+@using Syncfusion.Pdf
+@using Syncfusion.Pdf.Graphics
+@using Syncfusion.Pdf.Parsing
+
+@inject ILogService logService
+@inject ISettingsService settingsService
+@inject IPdfUsageService pdfUsageService;
+@inject IJSRuntime jsRuntime
+@inject IDialogService DialogService
+@inject ISnackbar snackbar
+
+<PageTitle>Watermark</PageTitle>
+
+<MudGrid>
+    <MudItem xs="1">
+        <MudPaper Class="pa-2" Style="height:calc(100vh - 60px); display: flex; flex-direction: column; align-items: center;">
+            <MudFileUpload T="IBrowserFile"
+                           Disabled="@downloadLimitReached"
+                           FilesChanged="OnPdfFileSelected"
+                           MaximumFileCount="1" Accept=".pdf">
+                <ActivatorContent>
+                    <MudTooltip Text="@downloadLimitReachedPdfMessage">
+                        <MudIconButton Variant="Variant.Filled"
+                                       Color="Color.Default"
+                                       Icon="@Icons.Material.Outlined.PictureAsPdf">
+                        </MudIconButton>
+                    </MudTooltip>
+                </ActivatorContent>
+            </MudFileUpload>
+            <br />
+
+            <MudFileUpload T="IBrowserFile"
+                           Disabled="@downloadLimitReached"
+                           FilesChanged="OnImageFileSelected"
+                           MaximumFileCount="1" Accept=".png, .jpg, .jpeg">
+                <ActivatorContent>
+                    <MudTooltip Text="@downloadLimitReachedImageMessage">
+                        <MudIconButton Variant="Variant.Filled"
+                                       Disabled="@downloadLimitReached"
+                                       Color="Color.Default"
+                                       Icon="@Icons.Material.Filled.Image">
+                        </MudIconButton>
+                    </MudTooltip>
+                </ActivatorContent>
+            </MudFileUpload>
+            <br />
+
+            <MudTooltip Text="Watermark Image">
+                <MudImage Src="@selectedImageBase64" Width="40" Height="40" />
+            </MudTooltip>
+            <br />
+
+            <MudTooltip Text="Apply Watermark">
+                <MudIconButton Variant="Variant.Filled"
+                               Color="Color.Default"
+                               OnClick="OnApplyWatermark"
+                               Disabled="@disableWatermarkButton"
+                               Icon="@Icons.Material.Filled.WaterDrop">
+                </MudIconButton>
+            </MudTooltip>
+            <br />
+
+            @*             <MudTooltip Text="Clear Watermark">
+                <MudIconButton Variant="Variant.Filled"
+                               Color="Color.Default"
+                               OnClick="OnRestore"
+                               Disabled="@(!watermarkApplied)"
+                               Icon="@Icons.Material.Filled.Restore">
+                    Restore
+                </MudIconButton>
+            </MudTooltip>
+            <br />
+ *@
+            <MudTooltip Text="Download">
+                <MudIconButton Variant="Variant.Filled"
+                               Color="Color.Default"
+                               OnClick="OnSaveWatermark"
+                               Disabled="@(!watermarkApplied)"
+                               Icon="@Icons.Material.Filled.Download">
+                </MudIconButton>
+            </MudTooltip>
+            <br />
+
+            <MudTooltip Text="@settingsToolTip">
+                <MudIconButton Variant="Variant.Filled"
+                               Color="Color.Default"
+                               OnClick="OnSettings"
+                               Icon="@Icons.Material.Filled.Settings">
+                </MudIconButton>
+            </MudTooltip>
+
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="11">
+        <SfPdfViewer2 @ref="@Viewer"
+                      EnableToolbar="false"
+                      DownloadFileName="watermark.pdf"
+                      Height="100%"
+                      Width="100%">
+            <PdfViewerEvents DocumentLoaded="onDocumentLoaded"
+                             DocumentUnloaded="onDocumentUnloaded">
+            </PdfViewerEvents>
+        </SfPdfViewer2>
+    </MudItem>
+</MudGrid>
+
+<MudDialog @bind-Visible="settingVisible" Options="settingDialogOptions" Style="padding:10px;width:250px">
+    <TitleContent>
+        Settings
+    </TitleContent>
+    <DialogContent>
+        <MudSlider Step="1" T="float" @bind-value="@watermarkTransparency"
+                   Max=100 Variant="Variant.Filled" Color="Color.Info">Transparency (@watermarkTransparency)</MudSlider>
+        <br />
+        <MudSlider Step="1" T="int" @bind-value="@horizontalMargin"
+                   Max=100 Variant="Variant.Filled" Color="Color.Info">Horizontal Margin (@horizontalMargin)</MudSlider>
+        <br />
+        <MudSlider Step="1" T="int" @bind-value="@verticalMargin"
+                   Max=100 Variant="Variant.Filled" Color="Color.Info">Vertical Margin (@verticalMargin)</MudSlider>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="OnSettingsCancel">Cancel</MudButton>
+        <MudButton OnClick="OnSettingsSubmit">OK</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    private SfPdfViewer2? Viewer;
+    private string? errorMessage;
+    private string? selectedImageBase64;
+    private string? sourceDevice;
+    private long allowedPdfSize;
+    private long allowedImageSize;
+    private long allowedPageCount;
+    private long pdfSize;
+    private bool downloadLimitReached;
+    private string? downloadLimitReachedPdfMessage = "Select PDF";
+    private string? downloadLimitReachedImageMessage = "Select Watermark Image";
+    private bool documentLoaded;
+    private bool disableWatermarkButton = true;
+    private float watermarkTransparency = 50;
+    private bool watermarkApplied;
+    private bool settingVisible;
+    private string settingsToolTip = "Settings";
+
+    int verticalMargin = 0;
+    int horizontalMargin = 0;
+
+    DialogOptions? settingDialogOptions;
+
+    private async Task OnPdfFileSelected(IBrowserFile e)
+    {
+        await AddUpload(e.Size, e.Name);
+
+        await Viewer!.UnloadAsync();
+        errorMessage = null;
+        if (e.Size > allowedPdfSize)
+        {
+            errorMessage = $"Pdf file size ({e.Size.BytesToMb()} KB) exceeded allowed value: {allowedPdfSize.BytesToMb()} MB";
+            snackbar.Add(errorMessage, Severity.Error);
+            await Viewer!.UnloadAsync();
+        }
+        else
+        {
+            // Create a browser object URL so we can display it directly
+            using var stream = e.OpenReadStream(maxAllowedSize: allowedPdfSize);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var bytes = ms.ToArray();
+            await Viewer!.LoadAsync(bytes);
+            if (Viewer.PageCount > allowedPageCount)
+            {
+                errorMessage = $"Pdf file page count ({Viewer.PageCount}) exceeded allowed value: {allowedPageCount}";
+                snackbar.Add(errorMessage, Severity.Error);
+                await Viewer!.UnloadAsync();
+            }
+            else
+            {
+                pdfSize = e.Size;
+            }
+        }
+    }
+    private async Task OnImageFileSelected(IBrowserFile e)
+    {
+        await AddUpload(e.Size, e.Name);
+        errorMessage = null;
+        selectedImageBase64 = null;
+        EnableWatermarkButton();
+        if (e.Size > allowedImageSize)
+        {
+            errorMessage = $"Image size ({e.Size.BytesToKb()} KB) exceeded allowed value: {allowedImageSize.BytesToKb()} KB";
+            snackbar.Add(errorMessage, Severity.Error);
+        }
+        else
+        {
+            using (var stream = e.OpenReadStream(512000))
+            {
+                var buffer = new byte[stream.Length];
+                await stream.ReadAsync(buffer);
+                var base64 = Convert.ToBase64String(buffer);
+                selectedImageBase64 = $"data:image/png;base64,{base64}";
+            }
+        }
+        EnableWatermarkButton();
+    }
+    private async Task AddUpload(long size, string? fileName)
+    {
+        var response = await pdfUsageService.AddUpload(null,
+                    Core.Enums.EnumPdfFunction.Watermark,
+                    sourceDevice,
+                    size,
+                    fileName);
+
+        if (response.Code == EnumResponseCode.DailyUploadLimitReached)
+        {
+            downloadLimitReached = true;
+            downloadLimitReachedPdfMessage = response.ErrorMessage;
+            downloadLimitReachedImageMessage = response.ErrorMessage;
+            snackbar.Add(downloadLimitReachedPdfMessage!, Severity.Error);
+            StateHasChanged();
+        }
+    }
+    private async void OnApplyWatermark(MouseEventArgs args)
+    {
+        await ApplyWatermark(false);
+    }
+    private async void OnSaveWatermark(MouseEventArgs args)
+    {
+        var doc = await Viewer!.GetDocumentAsync();
+        var response = await pdfUsageService.SaveUsage(null,
+                        Core.Enums.EnumPdfFunction.Watermark,
+                        sourceDevice,
+                        Viewer!.PageCount,
+                        pdfSize,
+                        doc.Length);
+        if (response.Success)
+        {
+            await Viewer!.DownloadAsync();
+        }
+        else
+        {
+            snackbar.Add(response.ErrorMessage!, Severity.Error);
+        }
+    }
+    private async void OnRestore(MouseEventArgs args)
+    {
+        await ApplyWatermark(true);
+    }
+    private void OnSettings(MouseEventArgs args)
+    {
+        settingVisible = true;
+    }
+    private void OnSettingsSubmit(MouseEventArgs args)
+    {
+        settingVisible = false;
+    }
+    private void OnSettingsCancel(MouseEventArgs args)
+    {
+        settingVisible = false;
+    }
+
+    private async Task ApplyWatermark(bool restore)
+    {
+        try
+        {
+            errorMessage = null;
+            var document = await Viewer!.GetDocumentAsync();
+            using (var loadedDocument = new PdfLoadedDocument(document))
+            {
+                var imageData = selectedImageBase64!.Substring(selectedImageBase64.IndexOf(",") + 1);
+                var imageBytes = Convert.FromBase64String(imageData);
+
+                using (var imageStream = new MemoryStream(imageBytes))
+                {
+                    using (var image = new PdfBitmap(imageStream))
+                    {
+                        foreach (PdfPageBase page in loadedDocument.Pages)
+                        {
+                            var graphics = page.Graphics;
+                            if (restore)
+                            {
+                                graphics.Restore();
+                            }
+                            else
+                            {
+                                var transparency = (100 - watermarkTransparency) / 100;
+                                graphics.SetTransparency(transparency);
+                                graphics.DrawImage(
+                                    image,
+                                    horizontalMargin,
+                                    verticalMargin,
+                                    page.Graphics.ClientSize.Width - horizontalMargin * 2,
+                                    page.Graphics.ClientSize.Height - verticalMargin * 2);
+                            }
+                        }
+                    }
+                }
+                using (var ms = new MemoryStream())
+                {
+                    loadedDocument.Save(ms);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    await Viewer.UnloadAsync();
+                    await Viewer.LoadAsync(ms);
+                    watermarkApplied = !restore;
+                }
+            }
+        }
+        catch (Exception exception)
+        {
+            logService.Error("Error applying watermark", exception);
+            if (exception.Message.Equals("Unknown PNG filter", StringComparison.InvariantCultureIgnoreCase))
+            {
+                errorMessage = $"Error applying watermark: {exception.Message}";
+                snackbar.Add(errorMessage, Severity.Error);
+            }
+            else
+            {
+                errorMessage = "Error applying watermark";
+                snackbar.Add(errorMessage, Severity.Error);
+            }
+        }
+    }
+    private void EnableWatermarkButton()
+    {
+        disableWatermarkButton = !documentLoaded || errorMessage is not null || selectedImageBase64 is null;
+    }
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            allowedPdfSize = await settingsService.PdfMaxPdfFileSize();
+            allowedImageSize = await settingsService.WatermarkImageMaxSize();
+            allowedPageCount = await settingsService.MaxAllowedPageCount();
+            sourceDevice = await jsRuntime.InvokeAsync<string>("eval", "navigator.userAgent");
+            var downloadReached = await pdfUsageService.DailyLimitReached();
+            if (downloadReached.Code == EnumResponseCode.DailyUploadLimitReached)
+            {
+                downloadLimitReached = true;
+                downloadLimitReachedPdfMessage = downloadReached.ErrorMessage;
+                downloadLimitReachedImageMessage = downloadReached.ErrorMessage;
+                snackbar.Add(downloadLimitReachedPdfMessage!, Severity.Error);
+                StateHasChanged();
+            }
+        }
+    }
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        settingDialogOptions = new DialogOptions
+        {
+            BackdropClick = false,
+            CloseOnEscapeKey = false
+        };
+    }
+    private void onDocumentLoaded(LoadEventArgs args)
+    {
+        documentLoaded = true;
+        EnableWatermarkButton();
+    }
+    private void onDocumentUnloaded(UnloadEventArgs args)
+    {
+        watermarkApplied = false;
+        documentLoaded = false;
+        EnableWatermarkButton();
+    }
+}

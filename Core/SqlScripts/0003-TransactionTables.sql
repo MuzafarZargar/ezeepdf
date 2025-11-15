@@ -1,0 +1,104 @@
+﻿USE ezeepdf
+
+GO
+
+Create TABLE Users (
+	UserId INT IDENTITY(1,1) PRIMARY KEY,
+	UserTypeId INT NOT NULL FOREIGN KEY REFERENCES LuUserType(UserTypeId),
+	FirstName VARCHAR(100) NOT NULL,
+	LastName VARCHAR(100) NOT NULL,
+	EmailAddress VARCHAR(255) NOT NULL UNIQUE,
+	[Password] VARCHAR(100) NOT NULL,
+	Locked BIT DEFAULT 0,
+	LockedAt DATETIME2 NULL,
+	LastPasswordChangeTime DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+	FailedLoginAttemptCount INT NOT NULL DEFAULT 0,
+	ForcePasswordChange BIT NOT NULL DEFAULT 0)
+
+CREATE TABLE RefreshToken(
+	RefreshTokenId INT IDENTITY(1,1) PRIMARY KEY,
+	UserId INT NOT NULL FOREIGN KEY REFERENCES Users(UserId),
+	SourceDevice VARCHAR(255) NOT NULL,
+	Token VARCHAR(100) NOT NULL,
+	IssuedAt DATETIME2 NOT NULL,
+	ExpiresAt DATETIME2 NOT NULL,
+	RevokedAt DATETIME2 NULL,
+	IpAddress VARCHAR(30) NOT NULL,
+	ReplacedById INT NULL FOREIGN KEY REFERENCES RefreshToken(RefreshTokenId),
+	GracePeriodExpiresAt DATETIME2 NULL)
+
+CREATE TABLE Transactions(
+	TransactionId INT IDENTITY(1,1) PRIMARY KEY,
+	TransactionStatusId INT NOT NULL FOREIGN KEY REFERENCES LuTransactionStatus(TransactionStatusId),
+	TransactionModeId INT NOT NULL FOREIGN KEY REFERENCES LuTransactionMode(TransactionModeId),
+	UserId INT NOT NULL FOREIGN KEY REFERENCES Users(UserId),
+	ProductId INT NOT NULL FOREIGn KEY REFERENCES LuProduct (ProductId),
+	SubscriptionTypeId INT NOT NULL FOREIGN KEY REFERENCES LuSubscriptionType(SubscriptionTypeId),
+	AmountPaid MONEY NOT NULL,
+	StartTime DATETIME2 NOT NULL,
+	EndTime DATETIME2 NULL,
+	IpAddress VARCHAR(30) NOT NULL,
+	BankReferenceId VARCHAR(100) NULL,
+	Id2 VARCHAR(100) NULL,
+	Id3 VARCHAR(100) NULL,
+	BankMessage VARCHAR(1000) NULL)
+
+CREATE TABLE Invoice(
+	InvoiceId INT IDENTITY(1000,1) PRIMARY KEY,
+	InvoiceDate DATETIME2 NOT NULL,
+	InvoiceNumber VARCHAR(15) NOT NULL UNIQUE,
+	TransactionId INT NOT NULL FOREIGN KEY REFERENCES Transactions(TransactionId))
+
+CREATE TABLE UserSubscription(
+	UserSubscriptionId INT IDENTITY(1,1) PRIMARY KEY,
+	TransactionId INT NOT NULL FOREIGN KEY REFERENCES Transactions(TransactionId),
+	SourceDevice VARCHAR(255) NOT NULL,
+	StartDate DATETIME2 NOT NULL,
+	EndDate DATETIME2 NOT NULL,
+	Active BIT NOT NULL)
+
+CREATE TABLE UserPdfUsage(
+	UserPdfUsageId INT IDENTITY(1,1) PRIMARY KEY,
+	UserId INT NULL FOREIGN KEY REFERENCES Users(UserId),
+	PdfFunctionId INT NOT NULL FOREIGN KEY REFERENCES LuPdfFunction(PdfFunctionId),
+	UserSubscriptionId INT NULL FOREIGN KEY REFERENCES UserSubscription(UserSubscriptionId),
+	UsageDate DATETIME2 NOT NULL,
+	PdfPageCount int NOT NULL,
+	PdfSize float NOT NULL,
+	PdfChangedSize float NOT NULL,
+	IpAddress VARCHAR(30) NOT NULL,	
+	SourceDevice VARCHAR(255) NOT NULL)
+	
+CREATE TABLE PdfUpload(
+	PdfUploadId INT IDENTITY(1,1) PRIMARY KEY,
+	UserId INT NULL FOREIGN KEY REFERENCES Users(UserId),
+	PdfFunctionId INT NOT NULL FOREIGN KEY REFERENCES LuPdfFunction(PdfFunctionId),
+	UploadDate DATETIME2 NOT NULL,
+	PdfSize float NOT NULL,
+	[FileName] VARCHAR(255) NULL,
+	IpAddress VARCHAR(30) NOT NULL,
+	SourceDevice VARCHAR(255) NOT NULL)
+
+CREATE TABLE ErrorLog(
+	ErrorLogId INT IDENTITY(1,1) PRIMARY KEY,
+	UserId INT NULL FOREIGN KEY REFERENCES Users(UserId),
+	DateCreated DATETIME2 NOT NULL,
+	ErrorMessage VARCHAR(300) NOT NULL,
+	FullMessage VARCHAR(MAX) NOT NULL,
+	Server VARCHAR(100) NOT NULL,
+	Url VARCHAR(300) NOT NULL,
+	IpAddress VARCHAR(30) NOT NULL,
+	Source VARCHAR(20) NULL)
+
+CREATE TABLE Feedback(
+	FeedbackId INT IDENTITY(1,1) PRIMARY KEY,
+	UserId INT NULL FOREIGN KEY REFERENCES Users(UserId),
+	EmailAddress VARCHAR(255) NULL,
+	FeedbackText NVARCHAR(500) NOT NULL,
+	DateCreated DATETIME2 NOT NULL,
+	SourceDevice VARCHAR(255) NOT NULL,
+	IpAddress VARCHAR(30) NOT NULL,
+	ActionTaken NVARCHAR(500) NULL,
+	ActionTakenById INT NULL FOREIGN KEY REFERENCES Users(UserId),
+	ActionDate DATETIME2 NULL)
+GO

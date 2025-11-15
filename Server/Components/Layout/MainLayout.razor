@@ -1,0 +1,54 @@
+﻿@inherits LayoutComponentBase
+
+@* Required *@
+<MudThemeProvider IsDarkMode="true" />
+<MudPopoverProvider @rendermode="InteractiveServer" />
+
+@* Needed for dialogs *@
+<MudDialogProvider @rendermode="InteractiveServer" />
+
+@* Needed for snackbars *@
+<MudSnackbarProvider @rendermode="InteractiveServer" />
+
+@inject NavigationManager navigationManager;
+
+<MudLayout>
+    <MudAppBar Elevation="1" Color="Color.Default" Class="appbar" Fixed="false">
+        <MudImage Src="mzydevs.png" Width="70" Height="70" />&ensp;&ensp;&ensp;
+        <MudGrid> 
+                @foreach (var link in NavLinks)
+                {
+                    <MudItem xs="2" >
+                        <MudNavLink Href="@link.Href" Match="NavLinkMatch.All" Class="@GetLinkClass(link.Href)">
+                           <MudIcon Icon=@link.Icon Size="Size.Small"></MudIcon> @link.Text
+                        </MudNavLink>
+                    </MudItem>
+                }
+        </MudGrid>
+    </MudAppBar>
+    <MudMainContent Class="pa-2 ma-0">
+        @Body
+    </MudMainContent>
+
+</MudLayout>
+
+
+@code {
+
+    private record NavItem(string Text, string Href, string Icon);
+    private List<NavItem> NavLinks = new()
+    {
+
+        new("Home", "/", Icons.Material.Sharp.Home),
+        new("Annotations", "/edit-pdf", Icons.Material.Sharp.Draw),
+        new("Watermark", "/watermark", Icons.Material.Sharp.WaterDrop),
+        new("Feedback", "/feedback", Icons.Material.Sharp.InsertComment),
+    };
+    private string GetLinkClass(string href)
+    {
+        var current = navigationManager.Uri.Replace(navigationManager.BaseUri, "/");
+        return current.Equals(href, StringComparison.OrdinalIgnoreCase)
+            ? "nav-link active"
+            : "nav-link";
+    }
+}

@@ -1,0 +1,44 @@
+﻿@page "/logout"
+
+@rendermode InteractiveServer
+
+@using EzeePdf.Core
+@using EzeePdf.Services
+
+@inject NavigationManager navigationManager;
+@inject IUserService userService;
+
+<MudCard>
+    <MudCardHeader>
+        <h4>
+            LOGOUT
+        </h4>
+    </MudCardHeader>
+    <MudCardContent>
+        <span class="fw-bolder">You have successfully logged out of this application</span>
+    </MudCardContent>
+</MudCard>
+@inject AuthenticationStateProvider AuthStateProvider;
+
+@code {
+
+    [SupplyParameterFromQuery]
+    public string? DNR { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (DNR is null)
+        {
+            navigationManager.NavigateTo("/postlogin?Logout=true");
+        }
+    }
+    protected async override Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if (!string.IsNullOrWhiteSpace(DNR))
+        {
+            await userService.LogoutFromServer(DNR);
+        }
+    }
+}

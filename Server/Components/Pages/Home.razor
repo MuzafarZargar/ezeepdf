@@ -1,0 +1,140 @@
+﻿@page "/"
+
+@rendermode InteractiveServer
+
+@using EzeePdf.Core.Extensions
+@using MudBlazor
+
+@inject NavigationManager navigationManager
+@inject ISettingsService settingsService
+
+<MudPaper Class="d-flex justify-center align-center" Style="height:calc(100vh - 60px);background-color:#1e1e1e">
+    <MudContainer MaxWidth="MaxWidth.Medium">
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6" Color="Color.Warning">
+            <MudIcon Icon="@Icons.Material.TwoTone.PictureAsPdf" Color="Color.Warning" />
+            PDF Utility Suite
+        </MudText>
+
+        <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-8">
+            Enhance, annotate, and personalize your PDFs with professional tools.
+        </MudText>
+
+        <MudGrid Justify="Justify.Center">
+            <!-- Annotation Feature -->
+            <MudItem xs="12" sm="6">
+                <MudCard Class="h-100">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6" Class="mb-2">
+                            <MudIcon Size="Size.Small"
+                                     Icon="@Icons.Material.Sharp.Draw" />&nbsp;&nbsp;Annotations
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            Highlight, underline, strike through, add notes, draw shapes, stamps, and measure with calibration tools.
+                        </MudText>
+                    </MudCardContent>
+                    <MudCardActions Class="justify-between">
+                        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="NavigateToEdit">
+                            Annotations
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+
+            <!-- Watermark Feature -->
+            <MudItem xs="12" sm="6">
+                <MudCard Class="h-100">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6" Class="mb-2">
+                            <MudIcon Size="Size.Small"
+                                     Icon="@Icons.Material.Sharp.WaterDrop" />&nbsp;&nbsp;Watermark
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            Add a watermark image to your PDF with adjustable opacity and margins.
+                        </MudText>
+                    </MudCardContent>
+                    <MudCardActions Class="justify-between">
+                        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="NavigateToWatermark">
+                            Watermark
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+
+            <!-- Feedback Feature -->
+            <MudItem xs="12" sm="6">
+                <MudCard Class="h-100">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6" Class="mb-2">
+                            <MudIcon Size="Size.Small"
+                                     Icon="@Icons.Material.Sharp.InsertComment" />&nbsp;&nbsp;Feedback
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            Share your thoughts or report an issue.
+                        </MudText>
+                    </MudCardContent>
+                    <MudCardActions Class="justify-between">
+                        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="NavigateToFeedback">
+                            Feedback
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+
+            <!-- Limits -->
+            <MudItem xs="12" sm="6">
+                <MudCard Class="h-100">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6" Class="mb-2">
+                            <MudIcon Size="Size.Small"
+                                     Icon="@Icons.Material.Sharp.Lock" />&nbsp;&nbsp;Limits
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            <ul>
+                                <li>Each feature can be used only once in @consecutiveUsageLimit minutes</li>
+                                <li>A PDF with a maximum of @maxPageCount pages can be uploaded</li>
+                                <li>A PDF with a maximum size of @maxPdfUploadLimit MB can be uploaded</li>
+                                <li>A Watermark with a maximum of @maxWatermarkUploadLimit KB can be uploaded</li>
+                            </ul>
+                        </MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+</MudPaper>
+
+@code {
+    private int dailyPdfDownloadLimit;
+    private long maxPdfUploadLimit;
+    private long maxWatermarkUploadLimit;
+    private int consecutiveUsageLimit;
+    private int maxPageCount;
+
+    private void NavigateToEdit()
+    {
+        navigationManager.NavigateTo("/edit-pdf");
+    }
+    private void NavigateToWatermark()
+    {
+        navigationManager.NavigateTo("/watermark");
+    }
+    private void NavigateToFeedback()
+    {
+        navigationManager.NavigateTo("/feedback");
+    }
+    private void NavigateTo(string route)
+    {
+        navigationManager.NavigateTo(route);
+    }
+    protected async override Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var maxSize = await settingsService.PdfMaxPdfFileSize();
+        maxPdfUploadLimit = maxSize.BytesToMb();
+        maxPageCount = await settingsService.MaxAllowedPageCount();
+        dailyPdfDownloadLimit = await settingsService.PdfDailyLimit();
+        consecutiveUsageLimit = await settingsService.PdfConsecutiveDownloadWait();
+        maxSize = await settingsService.WatermarkImageMaxSize();
+        maxWatermarkUploadLimit = maxSize.BytesToKb();
+    }
+}
