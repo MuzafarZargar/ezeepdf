@@ -11,11 +11,12 @@ namespace EzeePdf.Middleware
             this.next = next;
         }
 
-        public async Task InvokeAsync(HttpContext context, IUserSessionService userSessionService)
+        public async Task InvokeAsync(HttpContext context)
         {
+            var userSessionService = context.RequestServices.GetRequiredService<IUserSessionService>();
             string? ip = context.Connection.RemoteIpAddress?.ToString();
 
-            if (string.IsNullOrWhiteSpace(ip) || ip == "::1")
+            if (string.IsNullOrWhiteSpace(ip) || ip == "::1" || ip == "127.0.0.1")
             {
                 if (context.Request.Headers.TryGetValue("X-Forwarded-For", out var forwarded))
                 {
