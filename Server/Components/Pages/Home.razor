@@ -7,9 +7,11 @@
 
 @inject NavigationManager navigationManager
 @inject ISettingsService settingsService
+@inject IJSRuntime jsRuntime
 
 <MudPaper Class="d-flex justify-center align-center" Style="height:calc(100vh - 60px);background-color:#1e1e1e">
     <MudContainer MaxWidth="MaxWidth.Medium">
+        <h3>Ip Address of client: @IpAddress</h3>
         <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6" Color="Color.Warning">
             <MudIcon Icon="@Icons.Material.TwoTone.PictureAsPdf" Color="Color.Warning" />
             PDF Utility Suite
@@ -109,6 +111,7 @@
     private long maxWatermarkUploadLimit;
     private int consecutiveUsageLimit;
     private int maxPageCount;
+    private string? IpAddress;
 
     private void NavigateToEdit()
     {
@@ -136,5 +139,21 @@
         consecutiveUsageLimit = await settingsService.PdfConsecutiveDownloadWait();
         maxSize = await settingsService.WatermarkImageMaxSize();
         maxWatermarkUploadLimit = maxSize.BytesToKb();
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            try
+            {
+                IpAddress = await jsRuntime.InvokeAsync<string>("getPublicIp");
+                StateHasChanged();
+            }
+            catch
+            {
+            }
+        }
     }
 }

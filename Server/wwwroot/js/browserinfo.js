@@ -10,3 +10,9 @@ window.saveFile = (fileName, contentType, base64Data) => {
     link.href = `data:${contentType};base64,${base64Data}`;
     link.click();
 };
+
+window.getPublicIp = async function () {
+    let res = await fetch("/api/client-ip");
+    let data = await res.json();
+    return data.ip;
+}

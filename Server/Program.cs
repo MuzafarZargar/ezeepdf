@@ -80,10 +80,11 @@ builder.Services.AddScoped<IResolver, Resolver>(s => new Resolver(s));
 builder.Services.AddSingleton(s => new InternalResolver(s));
 builder.Services.AddSingleton<IServiceResolver, HttpContextServiceResolver>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<CircuitHandler, AppCircuitHandler>();
 builder.Services.AddScoped<IUserSessionService, UserSessionService>();
 
 builder.Services.AddCoreService();
+
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -110,8 +111,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseMiddleware<IpMiddleware>();
-
 //app.UseHttpsRedirection();
 
 app.UseAntiforgery();
@@ -129,6 +128,8 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
+
+app.MapControllers();
 
 Utils.PrintMessage($"Application starting on [{AppConfig.Instance.EzeePdfHost.Url}] in {environmentType} mode");
 
