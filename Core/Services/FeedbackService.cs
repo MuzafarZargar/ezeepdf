@@ -2,19 +2,18 @@
 using EzeePdf.Core.Repositories;
 using EzeePdf.Core.Responses;
 using EzeePdf.Core.Services.Logging;
-using Microsoft.AspNetCore.Http;
 
 namespace EzeePdf.Core.Services
 {
     public class FeedbackService(
             IFeedbackRepository feedbackRepository,
             ISettingsService settingsService,
-            IHttpContextAccessor httpContextAccessor,
+            HttpClient httpClient,
             ILogService logService) : IFeedbackService
     {
         private readonly IFeedbackRepository feedbackRepository = feedbackRepository;
         private readonly ISettingsService settingsService = settingsService;
-        private readonly IHttpContextAccessor httpContextAccessor = httpContextAccessor;
+        private readonly HttpClient httpClient = httpClient;
         private readonly ILogService logService = logService;
 
         public async Task<DataResponse> SaveFeedback(UserFeedback request)
@@ -24,10 +23,10 @@ namespace EzeePdf.Core.Services
             try
             {
                 var consecutiveTime = await settingsService.PdfConsecutiveDownloadWait();
-                code = await Utils.BlockForTime(httpContextAccessor?.HttpContext, consecutiveTime, feedbackRepository.GetThisIpAddressLastFeedbackTime);
+                code = await Utils.BlockForTime(httpClient, consecutiveTime, feedbackRepository.GetThisIpAddressLastFeedbackTime);
                 if (code == EnumResponseCode.Success)
                 {
-                    request.IpAddress = Utils.IpAddress(httpContextAccessor?.HttpContext);
+                    request.IpAddress = await Utils.IpAddress(httpClient);
                     request.FeedbackDate = Utils.UtcNow;
                     request.SourceDevice ??= Constants.DEFAULT_DEVICE_NAME;
                     await feedbackRepository.SaveFeedback(request);

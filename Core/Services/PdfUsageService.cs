@@ -4,7 +4,6 @@ using EzeePdf.Core.Model.Pdf;
 using EzeePdf.Core.Repositories;
 using EzeePdf.Core.Responses;
 using EzeePdf.Core.Services.Logging;
-using Microsoft.AspNetCore.Http;
 
 namespace EzeePdf.Core.Services
 {
@@ -12,12 +11,13 @@ namespace EzeePdf.Core.Services
         IPdfUsageRepository pdfUsageRepository,
         ISettingsService settingsService,
         ILogService logService,
-        IHttpContextAccessor httpContextAccessor) : IPdfUsageService
+        HttpClient httpClient) : IPdfUsageService
     {
         private readonly IPdfUsageRepository pdfUsageRepository = pdfUsageRepository;
         private readonly ISettingsService settingsService = settingsService;
         private readonly ILogService logService = logService;
-        private readonly IHttpContextAccessor httpContextAccessor = httpContextAccessor;
+        private readonly HttpClient httpClient = httpClient;
+
         public async Task<DataResponse> DailyLimitReached()
         {
             string? errorMessage = default;
@@ -53,7 +53,7 @@ namespace EzeePdf.Core.Services
                 var usage = new PdfUsage
                 {
                     SourceDevice = sourceDevice ?? Constants.DEFAULT_DEVICE_NAME,
-                    IpAddress = Utils.IpAddress(httpContextAccessor?.HttpContext),
+                    IpAddress = await Utils.IpAddress(httpClient),
                     Function = function.Value(),
                     UsageDate = Utils.UtcNow,
                     FileName = fileName,
@@ -83,7 +83,7 @@ namespace EzeePdf.Core.Services
             {
                 var consecutiveTime = await settingsService.PdfConsecutiveDownloadWait();
 
-                code = await Utils.BlockForTime(httpContextAccessor?.HttpContext, function, consecutiveTime,
+                code = await Utils.BlockForTime(httpClient, function, consecutiveTime,
                                                 pdfUsageRepository.GetThisIpAddressLastUsageTime);
                 if (code != EnumResponseCode.Success)
                 {
@@ -94,7 +94,7 @@ namespace EzeePdf.Core.Services
                     var usage = new PdfUsage
                     {
                         SourceDevice = sourceDevice ?? Constants.DEFAULT_DEVICE_NAME,
-                        IpAddress = Utils.IpAddress(httpContextAccessor?.HttpContext),
+                        IpAddress = await Utils.IpAddress(httpClient),
                         Function = function.Value(),
                         UsageDate = Utils.UtcNow,
                         PageCount = pageCount,

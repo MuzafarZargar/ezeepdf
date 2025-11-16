@@ -1,11 +1,6 @@
-﻿using System.Collections.Concurrent;
-using System.ComponentModel;
-using System.IdentityModel.Tokens.Jwt;
-using System.Net;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using Azure;
-using EzeePdf.Core.DB;
 using EzeePdf.Core.Enums;
 using EzeePdf.Core.Exceptions;
 using EzeePdf.Core.Extensions;
@@ -15,13 +10,13 @@ using EzeePdf.Core.Repositories;
 using EzeePdf.Core.Responses;
 using EzeePdf.Core.Services.Logging;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace EzeePdf.Core.Services
 {
     public class UserService(IUserRepository userRepository,
+            HttpClient httpClient,
             IHttpContextAccessor httpContextAccessor,
             ILogService logService,
             IOptions<Jwt> jwt) : IUserService
@@ -32,7 +27,9 @@ namespace EzeePdf.Core.Services
         private readonly ILogService logService = logService;
 
         private readonly IUserRepository userRepository = userRepository;
+        private readonly HttpClient httpClient = httpClient;
         private readonly IHttpContextAccessor httpContextAccessor = httpContextAccessor;
+
         public async Task<DataResponse> CreateUser(NewUser user)
         {
             user.Password = user.Password.Hash256();
@@ -134,10 +131,11 @@ namespace EzeePdf.Core.Services
                     var jwtToken = cookieValue.FromJsonString<JwtToken>(true);
                     if (jwtToken is not null)
                     {
+                        var ipAddress  = await Utils.IpAddress(httpClient);
                         var newToken = await RefreshToken(jwtToken.AccessToken,
                            jwtToken.RefreshToken,
                            jwtToken.SourceDevice,
-                           Utils.IpAddress(httpContextAccessor.HttpContext),
+                           ipAddress,
                            true);
 
                         claims = newToken?.Claims;
@@ -181,10 +179,11 @@ namespace EzeePdf.Core.Services
                 var loginResponse = cookieValue.FromJsonString<LoginResponse>(true);
                 if (loginResponse?.Token is not null)
                 {
+                    var ipAddress = await Utils.IpAddress(httpClient);
                     var newToken = await RefreshToken(loginResponse.Token.AccessToken,
                                     loginResponse.Token.RefreshToken,
                                     loginResponse.Token.SourceDevice,
-                                    Utils.IpAddress(httpContextAccessor.HttpContext),
+                                    ipAddress,
                                     false);
                     if (newToken is not null)
                     {

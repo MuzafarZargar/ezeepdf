@@ -1,8 +1,6 @@
-﻿using System.Text.Json;
-using EzeePdf.Core.Enums;
-using EzeePdf.Core.Repositories;
+﻿using EzeePdf.Core.Enums;
+using EzeePdf.Core.Model.Config;
 using EzeePdf.Core.Responses;
-using Microsoft.AspNetCore.Http;
 
 namespace EzeePdf.Core
 {
@@ -12,26 +10,36 @@ namespace EzeePdf.Core
         public static DateTime UtcDay => DateTime.UtcNow.Date;
         public static DateTime Now => DateTime.Now;
         public static string HostName => Environment.MachineName;
-        public static string IpAddress(HttpContext? httpContext)
+        //public static string IpAddress(HttpContext? httpContext)
+        //{
+        //    return httpContext?.Connection?.RemoteIpAddress.ToString() ?? "127.0.0.1";
+        //}
+        public async static Task<string> IpAddress(HttpClient httpClient)
         {
-            return httpContext?.Connection?.RemoteIpAddress.ToString() ?? "127.0.0.1";
+            string? ipAddress = default;
+            try
+            {
+                ipAddress = await httpClient.GetStringAsync($"{AppConfig.Instance.EzeePdfHost.Url}/api/get-ip");
+            }
+            catch { }
+            return ipAddress ?? "localhost";
         }
         public async static Task<EnumResponseCode> BlockForTime(
-            HttpContext? context,
+            HttpClient httpClient,
             int consecutiveTime,
             Func<string, Task<DateTime>> prevDate)
         {
-            var ipAddress = IpAddress(context);
+            var ipAddress = await IpAddress(httpClient);
             var prevUsageDate = await prevDate(ipAddress);
             return ApplyTimeLimit(prevUsageDate, consecutiveTime);
         }
         public async static Task<EnumResponseCode> BlockForTime(
-            HttpContext? context, 
-            EnumPdfFunction usageType, 
+            HttpClient httpClient,
+            EnumPdfFunction usageType,
             int consecutiveTime,
             Func<string, EnumPdfFunction, Task<DateTime>> prevDate)
         {
-            var ipAddress = IpAddress(context);
+            var ipAddress = await IpAddress(httpClient);
             var prevUsageDate = await prevDate(ipAddress, usageType);
             return ApplyTimeLimit(prevUsageDate, consecutiveTime);
         }

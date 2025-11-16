@@ -81,6 +81,7 @@ builder.Services.AddSingleton<IServiceResolver, HttpContextServiceResolver>();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddCoreService();
+builder.Services.AddControllers();  
 
 var app = builder.Build();
 
@@ -107,7 +108,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+app.MapControllers();
+
+//app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
