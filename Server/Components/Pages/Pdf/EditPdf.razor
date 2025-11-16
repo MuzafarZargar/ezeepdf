@@ -69,6 +69,7 @@
     private string? errorMessage;
     private bool downloadLimitReached;
     private string? downloadLimitReachedPdfMessage = "Select PDF";
+    private string? ipAddress;
 
     private List<AllowedInteraction> underlineAllowedInteractions = [
             AllowedInteraction.Select,
@@ -106,7 +107,8 @@
                     Core.Enums.EnumPdfFunction.Watermark,
                     sourceDevice,
                     size,
-                    fileName);
+                    fileName, 
+                    ipAddress);
 
         if (response.Code == EnumResponseCode.DailyUploadLimitReached)
         {
@@ -124,7 +126,8 @@
                         sourceDevice,
                         Viewer!.PageCount,
                         pdfSize,
-                        doc.Length);
+                        doc.Length, 
+                        ipAddress);
 
         // var annotations = await Viewer.GetAnnotationsAsync();
         // await Viewer!.DeleteAnnotationsAsync(annotations);
@@ -189,6 +192,14 @@
                 downloadLimitReachedPdfMessage = downloadReached.ErrorMessage;
                 snackbar.Add(downloadLimitReachedPdfMessage!, Severity.Error);
                 StateHasChanged();
+            }
+            try
+            {
+                ipAddress = await jsRuntime.InvokeAsync<string>("getPublicIp");
+                StateHasChanged();
+            }
+            catch
+            {
             }
         }
     }

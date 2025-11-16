@@ -5,6 +5,6 @@ namespace EzeePdf.Core.Services
 {
     public interface IFeedbackService
     {
-        Task<DataResponse> SaveFeedback(UserFeedback request);
+        Task<DataResponse> SaveFeedback(UserFeedback request, string? ipAddress);
     }
 }

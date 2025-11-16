@@ -45,14 +45,15 @@ namespace EzeePdf.Core.Services
             EnumPdfFunction function,
             string? sourceDevice,
             long pdfSize,
-            string? fileName)
+            string? fileName,
+            string? ipAddress)
         {
             try
             {
                 var usage = new PdfUsage
                 {
                     SourceDevice = sourceDevice ?? Constants.DEFAULT_DEVICE_NAME,
-                    IpAddress = Utils.IpAddress(userSessionService),
+                    IpAddress = ipAddress ?? Utils.IpAddress(userSessionService),
                     Function = function.Value(),
                     UsageDate = Utils.UtcNow,
                     FileName = fileName,
@@ -74,7 +75,8 @@ namespace EzeePdf.Core.Services
             string? sourceDevice,
             int pageCount,
             long pdfSize,
-            long pdfChangedSize)
+            long pdfChangedSize,
+            string? ipAddress)
         {
             string? errorMessage = default;
             var code = EnumResponseCode.Success;
@@ -82,7 +84,7 @@ namespace EzeePdf.Core.Services
             {
                 var consecutiveTime = await settingsService.PdfConsecutiveDownloadWait();
 
-                code = await Utils.BlockForTime(userSessionService, function, consecutiveTime,
+                code = await Utils.BlockForTime(userSessionService, ipAddress, function, consecutiveTime,
                                                 pdfUsageRepository.GetThisIpAddressLastUsageTime);
                 if (code != EnumResponseCode.Success)
                 {
@@ -93,7 +95,7 @@ namespace EzeePdf.Core.Services
                     var usage = new PdfUsage
                     {
                         SourceDevice = sourceDevice ?? Constants.DEFAULT_DEVICE_NAME,
-                        IpAddress = Utils.IpAddress(userSessionService),
+                        IpAddress = ipAddress ?? Utils.IpAddress(userSessionService),
                         Function = function.Value(),
                         UsageDate = Utils.UtcNow,
                         PageCount = pageCount,

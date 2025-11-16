@@ -10,12 +10,14 @@ namespace EzeePdf.Core.Services
             EnumPdfFunction function,
             string? sourceDevice,
             long pdfSize,
-            string? fileName);
+            string? fileName,
+            string? ipAddress);
         Task<DataResponse> SaveUsage(int? userId,
         EnumPdfFunction function,
         string? sourceDevice,
         int pageCount,
         long pdfSize,
-        long pdfChangedSize);
+        long pdfChangedSize, 
+        string? ipAddress);
     }
 }

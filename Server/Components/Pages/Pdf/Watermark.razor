@@ -152,8 +152,9 @@
     private bool settingVisible;
     private string settingsToolTip = "Settings";
 
-    int verticalMargin = 0;
-    int horizontalMargin = 0;
+    private int verticalMargin = 0;
+    private int horizontalMargin = 0;
+    string? ipAddress;
 
     DialogOptions? settingDialogOptions;
 
@@ -218,7 +219,8 @@
                     Core.Enums.EnumPdfFunction.Watermark,
                     sourceDevice,
                     size,
-                    fileName);
+                    fileName,
+                    ipAddress);
 
         if (response.Code == EnumResponseCode.DailyUploadLimitReached)
         {
@@ -241,7 +243,8 @@
                         sourceDevice,
                         Viewer!.PageCount,
                         pdfSize,
-                        doc.Length);
+                        doc.Length,
+                        ipAddress);
         if (response.Success)
         {
             await Viewer!.DownloadAsync();
@@ -350,6 +353,14 @@
                 downloadLimitReachedImageMessage = downloadReached.ErrorMessage;
                 snackbar.Add(downloadLimitReachedPdfMessage!, Severity.Error);
                 StateHasChanged();
+            }
+            try
+            {
+                ipAddress = await jsRuntime.InvokeAsync<string>("getPublicIp");
+                StateHasChanged();
+            }
+            catch
+            {
             }
         }
     }

@@ -23,20 +23,22 @@ namespace EzeePdf.Core
         }
         public async static Task<EnumResponseCode> BlockForTime(
             IUserSessionService userSessionService,
+            string? ipAddress,
             int consecutiveTime,
             Func<string, Task<DateTime>> prevDate)
         {
-            var ipAddress = IpAddress(userSessionService);
+            ipAddress ??= IpAddress(userSessionService);
             var prevUsageDate = await prevDate(ipAddress);
             return ApplyTimeLimit(prevUsageDate, consecutiveTime);
         }
         public async static Task<EnumResponseCode> BlockForTime(
             IUserSessionService userSessionService,
+            string? ipAddress,
             EnumPdfFunction usageType,
             int consecutiveTime,
             Func<string, EnumPdfFunction, Task<DateTime>> prevDate)
         {
-            var ipAddress = IpAddress(userSessionService);
+            ipAddress ??= IpAddress(userSessionService);
             var prevUsageDate = await prevDate(ipAddress, usageType);
             return ApplyTimeLimit(prevUsageDate, consecutiveTime);
         }

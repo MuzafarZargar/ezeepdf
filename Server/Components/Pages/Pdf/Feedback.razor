@@ -54,11 +54,12 @@
 @code {
     private FeedbackDto feedbackModel = new();
     private string? sourceDevice;
+    private string? ipAddress;
 
     private async void HandleValidSubmit()
     {
         feedbackModel.SourceDevice = sourceDevice;
-        var response = await feedbackService.SaveFeedback(feedbackModel.Adapt<UserFeedback>());
+        var response = await feedbackService.SaveFeedback(feedbackModel.Adapt<UserFeedback>(), ipAddress);
 
         if (response.Success)
         {
@@ -79,5 +80,16 @@
     {
         await base.OnAfterRenderAsync(firstRender);
         sourceDevice = await jsRuntime.InvokeAsync<string>("eval", "navigator.userAgent");
+        if (firstRender)
+        {
+            try
+            {
+                ipAddress = await jsRuntime.InvokeAsync<string>("getPublicIp");
+                StateHasChanged();
+            }
+            catch
+            {
+            }
+        }
     }
 }

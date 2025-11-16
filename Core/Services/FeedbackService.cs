@@ -16,17 +16,17 @@ namespace EzeePdf.Core.Services
         private readonly IUserSessionService userSessionService = userSessionService;
         private readonly ILogService logService = logService;
 
-        public async Task<DataResponse> SaveFeedback(UserFeedback request)
+        public async Task<DataResponse> SaveFeedback(UserFeedback request, string? ipAddress)
         {
             string? errorMessage = default;
             var code = EnumResponseCode.Success;
             try
             {
                 var consecutiveTime = await settingsService.PdfConsecutiveDownloadWait();
-                code = await Utils.BlockForTime(userSessionService, consecutiveTime, feedbackRepository.GetThisIpAddressLastFeedbackTime);
+                code = await Utils.BlockForTime(userSessionService,ipAddress, consecutiveTime, feedbackRepository.GetThisIpAddressLastFeedbackTime);
                 if (code == EnumResponseCode.Success)
                 {
-                    request.IpAddress = Utils.IpAddress(userSessionService);
+                    request.IpAddress = ipAddress ?? Utils.IpAddress(userSessionService);
                     request.FeedbackDate = Utils.UtcNow;
                     request.SourceDevice ??= Constants.DEFAULT_DEVICE_NAME;
                     await feedbackRepository.SaveFeedback(request);
