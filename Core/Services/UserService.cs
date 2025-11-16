@@ -16,7 +16,7 @@ using Microsoft.IdentityModel.Tokens;
 namespace EzeePdf.Core.Services
 {
     public class UserService(IUserRepository userRepository,
-            HttpClient httpClient,
+            IUserSessionService userSessionService,
             IHttpContextAccessor httpContextAccessor,
             ILogService logService,
             IOptions<Jwt> jwt) : IUserService
@@ -27,7 +27,7 @@ namespace EzeePdf.Core.Services
         private readonly ILogService logService = logService;
 
         private readonly IUserRepository userRepository = userRepository;
-        private readonly HttpClient httpClient = httpClient;
+        private readonly IUserSessionService userSessionService = userSessionService;
         private readonly IHttpContextAccessor httpContextAccessor = httpContextAccessor;
 
         public async Task<DataResponse> CreateUser(NewUser user)
@@ -131,7 +131,7 @@ namespace EzeePdf.Core.Services
                     var jwtToken = cookieValue.FromJsonString<JwtToken>(true);
                     if (jwtToken is not null)
                     {
-                        var ipAddress  = await Utils.IpAddress(httpClient);
+                        var ipAddress  = Utils.IpAddress(userSessionService);
                         var newToken = await RefreshToken(jwtToken.AccessToken,
                            jwtToken.RefreshToken,
                            jwtToken.SourceDevice,
@@ -179,7 +179,7 @@ namespace EzeePdf.Core.Services
                 var loginResponse = cookieValue.FromJsonString<LoginResponse>(true);
                 if (loginResponse?.Token is not null)
                 {
-                    var ipAddress = await Utils.IpAddress(httpClient);
+                    var ipAddress = Utils.IpAddress(userSessionService);
                     var newToken = await RefreshToken(loginResponse.Token.AccessToken,
                                     loginResponse.Token.RefreshToken,
                                     loginResponse.Token.SourceDevice,

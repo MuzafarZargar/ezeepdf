@@ -79,9 +79,10 @@ builder.Services.AddScoped<IResolver, Resolver>(s => new Resolver(s));
 builder.Services.AddSingleton(s => new InternalResolver(s));
 builder.Services.AddSingleton<IServiceResolver, HttpContextServiceResolver>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<CircuitHandler, AppCircuitHandler>();
+builder.Services.AddScoped<IUserSessionService, UserSessionService>();
 
 builder.Services.AddCoreService();
-builder.Services.AddControllers();  
 
 var app = builder.Build();
 
@@ -107,8 +108,6 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
-app.MapControllers();
 
 //app.UseHttpsRedirection();
 

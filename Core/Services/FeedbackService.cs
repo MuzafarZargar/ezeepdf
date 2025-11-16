@@ -8,12 +8,12 @@ namespace EzeePdf.Core.Services
     public class FeedbackService(
             IFeedbackRepository feedbackRepository,
             ISettingsService settingsService,
-            HttpClient httpClient,
+            IUserSessionService userSessionService,
             ILogService logService) : IFeedbackService
     {
         private readonly IFeedbackRepository feedbackRepository = feedbackRepository;
         private readonly ISettingsService settingsService = settingsService;
-        private readonly HttpClient httpClient = httpClient;
+        private readonly IUserSessionService userSessionService = userSessionService;
         private readonly ILogService logService = logService;
 
         public async Task<DataResponse> SaveFeedback(UserFeedback request)
@@ -23,10 +23,10 @@ namespace EzeePdf.Core.Services
             try
             {
                 var consecutiveTime = await settingsService.PdfConsecutiveDownloadWait();
-                code = await Utils.BlockForTime(httpClient, consecutiveTime, feedbackRepository.GetThisIpAddressLastFeedbackTime);
+                code = await Utils.BlockForTime(userSessionService, consecutiveTime, feedbackRepository.GetThisIpAddressLastFeedbackTime);
                 if (code == EnumResponseCode.Success)
                 {
-                    request.IpAddress = await Utils.IpAddress(httpClient);
+                    request.IpAddress = Utils.IpAddress(userSessionService);
                     request.FeedbackDate = Utils.UtcNow;
                     request.SourceDevice ??= Constants.DEFAULT_DEVICE_NAME;
                     await feedbackRepository.SaveFeedback(request);

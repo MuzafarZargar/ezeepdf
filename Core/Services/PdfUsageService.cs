@@ -11,13 +11,12 @@ namespace EzeePdf.Core.Services
         IPdfUsageRepository pdfUsageRepository,
         ISettingsService settingsService,
         ILogService logService,
-        HttpClient httpClient) : IPdfUsageService
+        IUserSessionService userSessionService) : IPdfUsageService
     {
         private readonly IPdfUsageRepository pdfUsageRepository = pdfUsageRepository;
         private readonly ISettingsService settingsService = settingsService;
         private readonly ILogService logService = logService;
-        private readonly HttpClient httpClient = httpClient;
-
+        private readonly IUserSessionService userSessionService = userSessionService;
         public async Task<DataResponse> DailyLimitReached()
         {
             string? errorMessage = default;
@@ -53,7 +52,7 @@ namespace EzeePdf.Core.Services
                 var usage = new PdfUsage
                 {
                     SourceDevice = sourceDevice ?? Constants.DEFAULT_DEVICE_NAME,
-                    IpAddress = await Utils.IpAddress(httpClient),
+                    IpAddress = Utils.IpAddress(userSessionService),
                     Function = function.Value(),
                     UsageDate = Utils.UtcNow,
                     FileName = fileName,
@@ -83,7 +82,7 @@ namespace EzeePdf.Core.Services
             {
                 var consecutiveTime = await settingsService.PdfConsecutiveDownloadWait();
 
-                code = await Utils.BlockForTime(httpClient, function, consecutiveTime,
+                code = await Utils.BlockForTime(userSessionService, function, consecutiveTime,
                                                 pdfUsageRepository.GetThisIpAddressLastUsageTime);
                 if (code != EnumResponseCode.Success)
                 {
@@ -94,7 +93,7 @@ namespace EzeePdf.Core.Services
                     var usage = new PdfUsage
                     {
                         SourceDevice = sourceDevice ?? Constants.DEFAULT_DEVICE_NAME,
-                        IpAddress = await Utils.IpAddress(httpClient),
+                        IpAddress = Utils.IpAddress(userSessionService),
                         Function = function.Value(),
                         UsageDate = Utils.UtcNow,
                         PageCount = pageCount,
