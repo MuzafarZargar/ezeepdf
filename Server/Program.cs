@@ -5,6 +5,7 @@ using EzeePdf.Core.Enums;
 using EzeePdf.Core.Model.Config;
 using EzeePdf.Core.Services;
 using EzeePdf.Core.Services.DI;
+using EzeePdf.Middleware;
 using EzeePdf.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -108,6 +109,8 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.UseMiddleware<IpMiddleware>();
 
 //app.UseHttpsRedirection();
 
