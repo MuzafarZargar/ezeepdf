@@ -52,6 +52,7 @@ VALUES (1, 'PublicPasswordExpiryInDays', '90', 'Number of days after which publi
 	   (9, 'WatermarkMaxImageSizeKB', '50', 'Maximum size (KB) of watermark image that can be uploaded '),
 	   (10, 'MaxPdfSizeMB', '2', 'Maximum size (MB) of pdf that can be uploaded '),
 	   (11, 'MaxPdfSizeMBPerDay', '100', 'Maximum size (MB) of all pdfs that can be uploaded/downloaded in a day'),
-	   (12, 'ConsecutiveDownloadWait', '5', 'Number of minutes to wait before using a feature again')
+	   (12, 'ConsecutiveUsageWait', '10', 'Number of minutes to wait before using a feature again'),
+	   (13, 'ConsecutiveFeedbackWait', '30', 'Number of minutes to wait before submitting next feedback')
 
 	   

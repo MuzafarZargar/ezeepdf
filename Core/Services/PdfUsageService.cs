@@ -23,13 +23,11 @@ namespace EzeePdf.Core.Services
             var code = EnumResponseCode.Success;
             try
             {
-                string? denyReason = null;
                 var maxDailyLimit = await settingsService.PdfDailyLimit();
-                var consecutiveTime = await settingsService.PdfConsecutiveDownloadWait();
+                var consecutiveTime = await settingsService.PdfConsecutiveFeatureUsageWait();
 
                 if (await pdfUsageRepository.GetDayUsage(Utils.UtcDay) >= maxDailyLimit)
                 {
-                    denyReason = $"Daily download limit ({maxDailyLimit} MB) reached ";
                     code = EnumResponseCode.DailyUploadLimitReached;
                 }
             }
@@ -82,7 +80,7 @@ namespace EzeePdf.Core.Services
             var code = EnumResponseCode.Success;
             try
             {
-                var consecutiveTime = await settingsService.PdfConsecutiveDownloadWait();
+                var consecutiveTime = await settingsService.PdfConsecutiveFeatureUsageWait();
 
                 code = await Utils.BlockForTime(userSessionService, ipAddress, function, consecutiveTime,
                                                 pdfUsageRepository.GetThisIpAddressLastUsageTime);

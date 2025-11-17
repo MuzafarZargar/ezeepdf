@@ -8,7 +8,8 @@ namespace EzeePdf.Core.Services
         Task<int> GetInt(EnumSettings setting, int defaultValue = 0);
         Task<int> MaxAllowedPageCount();
         Task<int> PdfDailyLimit();
-        Task<int> PdfConsecutiveDownloadWait();
+        Task<int> PdfConsecutiveFeatureUsageWait();
+        Task<int> PdfConsecutiveFeedbackWait();
         Task<long> PdfMaxPdfFileSize();
         Task<long> WatermarkImageMaxSize();
     }

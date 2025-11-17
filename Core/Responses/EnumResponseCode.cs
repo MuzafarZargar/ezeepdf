@@ -130,7 +130,7 @@ namespace EzeePdf.Core.Responses
         [Description("Error saving feedback")]
         FeedbackSaveError = 175,
 
-        [Description("Daily download limit for application reached, please try next day")]
+        [Description("Daily upload/download limit for application reached, please try next day (UTC)")]
         DailyUploadLimitReached = 180,
 
         [Description("Daily limit fetch error")]

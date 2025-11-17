@@ -11,7 +11,6 @@
 
 <MudPaper Class="d-flex justify-center align-center" Style="height:calc(100vh - 60px);background-color:#1e1e1e">
     <MudContainer MaxWidth="MaxWidth.Medium">
-        <h3>Ip Address of client: @IpAddress</h3>
         <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6" Color="Color.Warning">
             <MudIcon Icon="@Icons.Material.TwoTone.PictureAsPdf" Color="Color.Warning" />
             PDF Utility Suite
@@ -36,7 +35,7 @@
                     </MudCardContent>
                     <MudCardActions Class="justify-between">
                         <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="NavigateToEdit">
-                            Annotations
+                            Try Now
                         </MudButton>
                     </MudCardActions>
                 </MudCard>
@@ -56,7 +55,7 @@
                     </MudCardContent>
                     <MudCardActions Class="justify-between">
                         <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="NavigateToWatermark">
-                            Watermark
+                            Try Now
                         </MudButton>
                     </MudCardActions>
                 </MudCard>
@@ -76,7 +75,7 @@
                     </MudCardContent>
                     <MudCardActions Class="justify-between">
                         <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="NavigateToFeedback">
-                            Feedback
+                            Try Now
                         </MudButton>
                     </MudCardActions>
                 </MudCard>
@@ -92,7 +91,8 @@
                         </MudText>
                         <MudText Typo="Typo.body2">
                             <ul>
-                                <li>Each feature can be used only once in @consecutiveUsageLimit minutes</li>
+                                <li>Each feature can be used only once in @consecutiveFeatureUsageLimit minutes</li>
+                                <li>Feedback can be submitted only once in @consecutiveFeedbackUsageLimit minutes</li>
                                 <li>A PDF with a maximum of @maxPageCount pages can be uploaded</li>
                                 <li>A PDF with a maximum size of @maxPdfUploadLimit MB can be uploaded</li>
                                 <li>A Watermark with a maximum of @maxWatermarkUploadLimit KB can be uploaded</li>
@@ -109,9 +109,9 @@
     private int dailyPdfDownloadLimit;
     private long maxPdfUploadLimit;
     private long maxWatermarkUploadLimit;
-    private int consecutiveUsageLimit;
+    private int consecutiveFeatureUsageLimit;
+    private int consecutiveFeedbackUsageLimit;
     private int maxPageCount;
-    private string? IpAddress;
 
     private void NavigateToEdit()
     {
@@ -136,24 +136,9 @@
         maxPdfUploadLimit = maxSize.BytesToMb();
         maxPageCount = await settingsService.MaxAllowedPageCount();
         dailyPdfDownloadLimit = await settingsService.PdfDailyLimit();
-        consecutiveUsageLimit = await settingsService.PdfConsecutiveDownloadWait();
+        consecutiveFeatureUsageLimit = await settingsService.PdfConsecutiveFeatureUsageWait();
+        consecutiveFeedbackUsageLimit = await settingsService.PdfConsecutiveFeedbackWait();
         maxSize = await settingsService.WatermarkImageMaxSize();
         maxWatermarkUploadLimit = maxSize.BytesToKb();
-    }
-
-    protected async override Task OnAfterRenderAsync(bool firstRender)
-    {
-        await base.OnAfterRenderAsync(firstRender);
-        if (firstRender)
-        {
-            try
-            {
-                IpAddress = await jsRuntime.InvokeAsync<string>("getPublicIp");
-                StateHasChanged();
-            }
-            catch
-            {
-            }
-        }
     }
 }

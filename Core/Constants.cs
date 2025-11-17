@@ -27,7 +27,7 @@
         public const int FREE_VERSION_PAGE_COUNT = 5;
         public const int FEEDBACK_MIN_LENGTH = 10;
         public const int FEEDBACK_MAX_LENGTH = 300;
-        public const int CONSECUTIVE_FEATURE_SAVE_WAIT_MINUTES = 1;
+        public const int CONSECUTIVE_FEATURE_USAGE_WAIT_MINUTES = 10;
     }
     public class CacheConstants
     {

@@ -19,7 +19,7 @@
             <MudCard Class="p-6" Style="border: solid 0.5px #D0D0D0;">
                 <MudCardContent>
                     <MudText Typo="Typo.h5" Class="mb-4 text-center">Feedback Form</MudText>
-                    <EditForm Model="@feedbackModel" OnValidSubmit="HandleValidSubmit" FormName="FeedbackForm">
+                    <EditForm Model="@feedbackModel" OnValidSubmit="SaveFeedback" FormName="FeedbackForm">
                         <DataAnnotationsValidator />
 
                         <MudTextField Label="Your feedback"
@@ -56,7 +56,7 @@
     private string? sourceDevice;
     private string? ipAddress;
 
-    private async void HandleValidSubmit()
+    private async void SaveFeedback()
     {
         feedbackModel.SourceDevice = sourceDevice;
         var response = await feedbackService.SaveFeedback(feedbackModel.Adapt<UserFeedback>(), ipAddress);

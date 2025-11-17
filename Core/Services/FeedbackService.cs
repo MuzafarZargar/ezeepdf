@@ -22,7 +22,7 @@ namespace EzeePdf.Core.Services
             var code = EnumResponseCode.Success;
             try
             {
-                var consecutiveTime = await settingsService.PdfConsecutiveDownloadWait();
+                var consecutiveTime = await settingsService.PdfConsecutiveFeedbackWait();
                 code = await Utils.BlockForTime(userSessionService,ipAddress, consecutiveTime, feedbackRepository.GetThisIpAddressLastFeedbackTime);
                 if (code == EnumResponseCode.Success)
                 {
@@ -33,7 +33,7 @@ namespace EzeePdf.Core.Services
                 }
                 else
                 {
-                    errorMessage = $"Each feature can be used only once in {consecutiveTime} minutes";
+                    errorMessage = $"Feedback can be submitted only once in {consecutiveTime} minutes";
                 }
             }
             catch (Exception exception)

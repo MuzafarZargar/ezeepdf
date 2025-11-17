@@ -38,9 +38,13 @@ namespace EzeePdf.Core.Services
         {
             return await GetInt(EnumSettings.MaxUploadPerDay, Constants.PDF_DAILY_UPLOAD_SIZE_MB);
         }
-        public async Task<int> PdfConsecutiveDownloadWait()
+        public async Task<int> PdfConsecutiveFeatureUsageWait()
         {
-            return await GetInt(EnumSettings.ConsecutiveDownloadWait, Constants.CONSECUTIVE_FEATURE_SAVE_WAIT_MINUTES);
+            return await GetInt(EnumSettings.ConsecutiveUsageWait, Constants.CONSECUTIVE_FEATURE_USAGE_WAIT_MINUTES);
+        }
+        public async Task<int> PdfConsecutiveFeedbackWait()
+        {
+            return await GetInt(EnumSettings.ConsecutiveFeedbackWait, Constants.CONSECUTIVE_FEATURE_USAGE_WAIT_MINUTES);
         }
         public async Task<long> PdfMaxPdfFileSize()
         {
