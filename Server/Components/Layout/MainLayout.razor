@@ -14,7 +14,10 @@
 
 <MudLayout>
     <MudAppBar Elevation="1" Color="Color.Default" Class="appbar" Fixed="false">
-        <MudImage Src="mzydevs.png" Width="70" Height="70" />&ensp;&ensp;&ensp;
+        <MudImage Src="mzydevs.png"
+                Alt="Free PDF Watermark | Free PDF Annotations"
+                Width="60" 
+                Height="60" />&ensp;&ensp;&ensp;
         <MudGrid> 
                 @foreach (var link in NavLinks)
                 {
@@ -38,10 +41,9 @@
     private record NavItem(string Text, string Href, string Icon);
     private List<NavItem> NavLinks = new()
     {
-
         new("Home", "/", Icons.Material.Sharp.Home),
-        new("Annotations", "/edit-pdf", Icons.Material.Sharp.Draw),
-        new("Watermark", "/watermark", Icons.Material.Sharp.WaterDrop),
+        new("Annotations", "/pdf-tools/annotations", Icons.Material.Sharp.Draw),
+        new("Watermark", "/pdf-tools/watermark", Icons.Material.Sharp.WaterDrop),
         new("Feedback", "/feedback", Icons.Material.Sharp.InsertComment),
     };
     private string GetLinkClass(string href)

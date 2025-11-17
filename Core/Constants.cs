@@ -22,8 +22,8 @@
         public const string DEFAULT_DEVICE_NAME = "web browser";
 
         public const int PDF_DAILY_UPLOAD_SIZE_MB = 100;
-        public const int PDF_MAX_UPLOAD_SIZE_MB = 2;  
-        public const int WATERMARK_MAX_SIZE_KB = 100;   
+        public const int PDF_MAX_UPLOAD_SIZE_MB = 2;
+        public const int WATERMARK_MAX_SIZE_KB = 100;
         public const int FREE_VERSION_PAGE_COUNT = 5;
         public const int FEEDBACK_MIN_LENGTH = 10;
         public const int FEEDBACK_MAX_LENGTH = 300;
@@ -34,5 +34,13 @@
         public const string SETTINGS_CACHE = "all_settings";
         public const int SETTINGS_CACHE_EXPIRY_MINUTES = 30;
 
+    }
+
+    public class RouteConstants
+    {
+        public const string HOME = "/";
+        public const string FEEDBACK = "/feedback";
+        public const string ANNOTATIONS = "/pdf-tools/annotations";
+        public const string WATERMARK = "/pdf-tools/watermark";
     }
 }

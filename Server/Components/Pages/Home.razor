@@ -9,6 +9,9 @@
 @inject ISettingsService settingsService
 @inject IJSRuntime jsRuntime
 
+<PageTitle>MzyDevs : Free PDF Watermark Tool | Online PDF Annotations</PageTitle>
+<meta name="description" content="Use our free PDF watermark tool and online PDF annotation service." />
+
 <MudPaper Class="d-flex justify-center align-center" Style="height:calc(100vh - 60px);background-color:#1e1e1e">
     <MudContainer MaxWidth="MaxWidth.Medium">
         <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6" Color="Color.Warning">
@@ -115,11 +118,11 @@
 
     private void NavigateToEdit()
     {
-        navigationManager.NavigateTo("/edit-pdf");
+        navigationManager.NavigateTo("/pdf-tools/annotations");
     }
     private void NavigateToWatermark()
     {
-        navigationManager.NavigateTo("/watermark");
+        navigationManager.NavigateTo("/pdf-tools/watermark");
     }
     private void NavigateToFeedback()
     {
