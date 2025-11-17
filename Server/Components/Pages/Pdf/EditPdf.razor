@@ -31,7 +31,7 @@
             <MudTooltip Text="Download">
                 <MudIconButton Variant="Variant.Filled"
                                Color="Color.Default"
-                               OnClick="OnSaveWatermark"
+                               OnClick="OnSave"
                                Disabled="@(documentLoaded==false || errorMessage is not null)"
                                Icon="@Icons.Material.Filled.Download">
                 </MudIconButton>
@@ -41,19 +41,28 @@
     </MudItem>
 
     <MudItem xs="11">
-        <SfPdfViewer2 @ref="@Viewer"
-                      EnableFormFields="false"
-                      EnablePrint="false"
-                      EnableFormDesigner="false"
-                      EnableDownload="@documentLoaded"
-                      DownloadFileName="newfile.pdf"
-                      Height="100%"
-                      Width="100%">
-            <PdfViewerEvents DocumentLoaded="DocumentLoaded">
-            </PdfViewerEvents>
-            <PdfViewerUnderlineSettings AllowedInteractions="@underlineAllowedInteractions" />
 
-        </SfPdfViewer2>
+        <div class="loader-container">
+            <!-- Background Progress -->
+            <MudProgressCircular Indeterminate="true" Class="loader-bg" />
+
+            <!-- Foreground Control -->
+            <SfPdfViewer2 @ref="@Viewer"
+                          EnableFormFields="false"
+                          EnablePrint="false"
+                          EnableFormDesigner="false"
+                          EnableDownload="@documentLoaded"
+                          DownloadFileName="newfile.pdf"
+                          Height="100%"
+                          Width="100%">
+                <PdfViewerEvents DocumentLoaded="DocumentLoaded"
+                                 DownloadStart="OnDownloadStart"
+                                 PrintStart="OnPrintStart">
+                </PdfViewerEvents>
+                <PdfViewerUnderlineSettings AllowedInteractions="@underlineAllowedInteractions" />
+
+            </SfPdfViewer2>
+        </div>
     </MudItem>
 
 </MudGrid>
@@ -70,6 +79,8 @@
     private bool downloadLimitReached;
     private string? downloadLimitReachedPdfMessage = "Select PDF";
     private string? ipAddress;
+    private bool customUploadCalled;
+    private bool customSaveCalled;
 
     private List<AllowedInteraction> underlineAllowedInteractions = [
             AllowedInteraction.Select,
@@ -80,6 +91,8 @@
 
     private async Task OnPdfFileSelected(IBrowserFile e)
     {
+        customUploadCalled = true;
+
         await AddUpload(e.Size, e.Name);
 
         await Viewer!.UnloadAsync();
@@ -107,7 +120,7 @@
                     Core.Enums.EnumPdfFunction.Watermark,
                     sourceDevice,
                     size,
-                    fileName, 
+                    fileName,
                     ipAddress);
 
         if (response.Code == EnumResponseCode.DailyUploadLimitReached)
@@ -118,53 +131,50 @@
             StateHasChanged();
         }
     }
-    private async void OnSaveWatermark(MouseEventArgs args)
+    private async void OnSave(MouseEventArgs args)
     {
         var doc = await Viewer!.GetDocumentAsync();
-        var response = await pdfUsageService.SaveUsage(null,
-                        Core.Enums.EnumPdfFunction.Editing,
-                        sourceDevice,
-                        Viewer!.PageCount,
-                        pdfSize,
-                        doc.Length, 
-                        ipAddress);
-
-        // var annotations = await Viewer.GetAnnotationsAsync();
-        // await Viewer!.DeleteAnnotationsAsync(annotations);
-        // foreach (var a in annotations)
-        // {
-        //     a.Thickness = 100;
-        //     if (a.Type == AnnotationType.Underline)
-        //     {
-        //         a.Color = "#FFF";
-        //         var b = a.Bound;
-        //         a.Bound = new Bound
-        //         {
-        //             Y = b.Y + 10,
-        //             Top = b.Top + 10,
-        //             Bottom = b.Bottom + 10,
-
-        //             X = b.X,
-        //             Left = b.Left,
-        //             Right = b.Right,
-        //             Height = 200,
-        //             Width = b.Width + 50
-        //         };
-        //     }
-        // }
-        if (response.Success)
+        if (doc is null)
         {
-            await Viewer!.DownloadAsync();
+            snackbar.Add("Sorry! there was some issue with document, please reload", Severity.Warning);
         }
         else
         {
-            snackbar.Add(response.ErrorMessage!, Severity.Error);
+            var response = await pdfUsageService.SaveUsage(null,
+                            Core.Enums.EnumPdfFunction.Editing,
+                            sourceDevice,
+                            Viewer!.PageCount,
+                            pdfSize,
+                            doc.Length,
+                            ipAddress);
+            if (response.Success)
+            {
+                customSaveCalled = true;
+                await Viewer!.DownloadAsync();
+            }
+            else
+            {
+                snackbar.Add(response.ErrorMessage!, Severity.Error);
+            }
         }
     }
-
     private async void DocumentLoaded(LoadEventArgs e)
     {
-        if (Viewer!.PageCount > allowedPageCount)
+        if (downloadLimitReached)
+        {
+            await Viewer!.UnloadAsync();
+            documentLoaded = false;
+            errorMessage = $"Application uploaded/download limit reached, please try next day (UTC)";
+            snackbar.Add(errorMessage, Severity.Error);
+        }
+        else if (!customUploadCalled)
+        {
+            await Viewer!.UnloadAsync();
+            documentLoaded = false;
+            errorMessage = $"Unauthorized access, use custom upload button";
+            snackbar.Add(errorMessage, Severity.Error);
+        }
+        else if (Viewer!.PageCount > allowedPageCount)
         {
             documentLoaded = false;
             errorMessage = $"Pdf file page count ({Viewer.PageCount}) exceeded allowed value: {allowedPageCount}";
@@ -175,6 +185,18 @@
         {
             documentLoaded = true;
         }
+        customUploadCalled = false;
+    }
+
+    private async void OnDownloadStart(DownloadStartEventArgs args)
+    {
+        if (!customSaveCalled)
+        {
+            await Viewer!.UnloadAsync();
+            errorMessage = "Unauthorized access, use custom download button";
+            snackbar.Add(errorMessage, Severity.Error);
+        }
+        customSaveCalled = false;
     }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
@@ -202,5 +224,9 @@
             {
             }
         }
+    }
+    private async void OnPrintStart(PrintStartEventArgs args)
+    {
+        await Viewer!.UnloadAsync();
     }
 }

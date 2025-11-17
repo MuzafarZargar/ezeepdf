@@ -16,3 +16,21 @@ window.getPublicIp = async function () {
     let data = await res.json();
     return data.ip;
 }
+
+window.getImageDimensions = async (base64Data) => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+
+        img.onload = () => {
+            resolve({
+                width: img.naturalWidth,
+                height: img.naturalHeight
+            });
+            URL.revokeObjectURL(url);
+        };
+
+        img.onerror = (e) => reject(e);
+
+        img.src = base64Data;
+    });
+};

@@ -13,7 +13,7 @@ a, .btn-link {
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 .content {
@@ -92,11 +92,109 @@ h1:focus {
     border-bottom: 2px solid #ffffff;
 }
 
+.nav-link-small {
+    color: yellow;
+    font-size: 1rem;
+    font-weight: lighter;
+    text-decoration: none;
+}
+
+/* Hover effect */
+.nav-link-small:hover {
+    color: #e0e0e0;
+}
+
+/* Active link (current page) */
+.nav-link-small.active {
+    color: #ffffff;
+    font-weight: 200;
+}
+
+.menu-icon-link-small {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding: 0 !important;
+    min-width: unset !important;
+    min-height: unset !important;
+    margin: 0 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
 .e-pv-open-document-container,
 .e-pv-download-document-container,
 .e-pv-print-document-container,
 .e-pv-formdesigner-container,
-.e-pv-submit-form-container
-{
+.e-pv-submit-form-container {
     display: none !important;
+}
+
+
+.e-pv-open-document-container,
+.e-pv-mobile-toolbar .e-pv-open-document-container,
+.e-pv-open-document-item,
+.e-pv-open-document {
+    display: none !important;
+}
+
+.e-pv-download-document-container,
+.e-pv-mobile-toolbar .e-pv-download-document-container,
+.e-pv-download-document-item,
+.e-pv-download-document {
+    display: none !important;
+}
+
+.e-pv-submit-form-document-container,
+.e-pv-mobile-toolbar .e-pv-submit-form-document-container,
+.e-pv-submit-form-document-item,
+.e-pv-submit-form-document {
+    display: none !important;
+}
+
+.e-pv-submitform-document-container,
+.e-pv-mobile-toolbar .e-pv-submitform-document-container,
+.e-pv-submitform-document-item,
+.e-pv-submitform-document {
+    display: none !important;
+}
+
+.e-pv-formdesigner-document-container,
+.e-pv-mobile-toolbar .e-pv-formdesigner-document-container,
+.e-pv-formdesigner-document-item,
+.e-pv-formdesigner-document {
+    display: none !important;
+}
+
+.e-pv-print-document-container,
+.e-pv-mobile-toolbar .e-pv-print-document-container,
+.e-pv-print-document-item,
+.e-pv-print-document {
+    display: none !important;
+}
+
+.loader-container {
+    position: relative;
+    height: 100%; /* keeps control size normal */
+    width: 100%;
+}
+
+.loader-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    color: blue;
+    z-index: 0; /* behind */
+    opacity: 1; /* optional: fade */
+}
+
+.loader-container > *:not(.loader-bg) {
+    position: absolute;
+    top: 0px;
+    z-index: 1; /* front */
+}
+
+.switch-left {
+    justify-content: flex-start !important;
 }

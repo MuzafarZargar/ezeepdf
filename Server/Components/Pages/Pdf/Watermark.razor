@@ -21,6 +21,7 @@
 <MudGrid>
     <MudItem xs="1">
         <MudPaper Class="pa-2" Style="height:calc(100vh - 60px); display: flex; flex-direction: column; align-items: center;">
+
             <MudFileUpload T="IBrowserFile"
                            Disabled="@downloadLimitReached"
                            FilesChanged="OnPdfFileSelected"
@@ -100,15 +101,21 @@
     </MudItem>
 
     <MudItem xs="11">
-        <SfPdfViewer2 @ref="@Viewer"
-                      EnableToolbar="false"
-                      DownloadFileName="watermark.pdf"
-                      Height="100%"
-                      Width="100%">
-            <PdfViewerEvents DocumentLoaded="onDocumentLoaded"
-                             DocumentUnloaded="onDocumentUnloaded">
-            </PdfViewerEvents>
-        </SfPdfViewer2>
+        <div class="loader-container">
+            <!-- Background Progress -->
+            <MudProgressCircular Indeterminate="true" Class="loader-bg" Color="Color.Info" />
+
+            <!-- Foreground Control -->
+            <SfPdfViewer2 @ref="@Viewer"
+                          EnableToolbar="false"
+                          DownloadFileName="watermark.pdf"
+                          Height="100%"
+                          Width="100%">
+                <PdfViewerEvents DocumentLoaded="onDocumentLoaded"
+                                 DocumentUnloaded="onDocumentUnloaded">
+                </PdfViewerEvents>
+            </SfPdfViewer2>
+        </div>
     </MudItem>
 </MudGrid>
 
@@ -120,11 +127,21 @@
         <MudSlider Step="1" T="float" @bind-value="@watermarkTransparency"
                    Max=100 Variant="Variant.Filled" Color="Color.Info">Transparency (@watermarkTransparency)</MudSlider>
         <br />
-        <MudSlider Step="1" T="int" @bind-value="@horizontalMargin"
-                   Max=100 Variant="Variant.Filled" Color="Color.Info">Horizontal Margin (@horizontalMargin)</MudSlider>
-        <br />
-        <MudSlider Step="1" T="int" @bind-value="@verticalMargin"
-                   Max=100 Variant="Variant.Filled" Color="Color.Info">Vertical Margin (@verticalMargin)</MudSlider>
+
+        @if (!useOriginalImageSize)
+        {
+            <MudSlider Step="1" T="int" @bind-value="@horizontalMargin"
+                       Max=100 Variant="Variant.Filled" Color="Color.Info">Horizontal Margin (@horizontalMargin)</MudSlider>
+            <br />
+            <MudSlider Step="1" T="int" @bind-value="@verticalMargin"
+                       Max=100 Variant="Variant.Filled" Color="Color.Info">Vertical Margin (@verticalMargin)</MudSlider>
+            <br />
+        }
+        @if (imageDimensions is not null)
+        {
+            <MudSwitch @bind-Value="@useOriginalImageSize" Label="Use Original Image Size" Class="switch-left" Color="Color.Info" />
+        }
+
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="OnSettingsCancel">Cancel</MudButton>
@@ -151,9 +168,10 @@
     private bool watermarkApplied;
     private bool settingVisible;
     private string settingsToolTip = "Settings";
-
+    private ImageDimensions? imageDimensions;
     private int verticalMargin = 0;
     private int horizontalMargin = 0;
+    private bool useOriginalImageSize;
     string? ipAddress;
 
     DialogOptions? settingDialogOptions;
@@ -192,6 +210,7 @@
     }
     private async Task OnImageFileSelected(IBrowserFile e)
     {
+        imageDimensions = null;
         await AddUpload(e.Size, e.Name);
         errorMessage = null;
         selectedImageBase64 = null;
@@ -209,6 +228,12 @@
                 await stream.ReadAsync(buffer);
                 var base64 = Convert.ToBase64String(buffer);
                 selectedImageBase64 = $"data:image/png;base64,{base64}";
+                try
+                {
+                    imageDimensions = await jsRuntime.InvokeAsync<ImageDimensions>(
+                          "getImageDimensions", selectedImageBase64);
+                }
+                catch { }
             }
         }
         EnableWatermarkButton();
@@ -238,20 +263,27 @@
     private async void OnSaveWatermark(MouseEventArgs args)
     {
         var doc = await Viewer!.GetDocumentAsync();
-        var response = await pdfUsageService.SaveUsage(null,
-                        Core.Enums.EnumPdfFunction.Watermark,
-                        sourceDevice,
-                        Viewer!.PageCount,
-                        pdfSize,
-                        doc.Length,
-                        ipAddress);
-        if (response.Success)
+        if (doc is null)
         {
-            await Viewer!.DownloadAsync();
+            snackbar.Add("Sorry! there was some issue with document, please reload", Severity.Warning);
         }
         else
         {
-            snackbar.Add(response.ErrorMessage!, Severity.Error);
+            var response = await pdfUsageService.SaveUsage(null,
+                            Core.Enums.EnumPdfFunction.Watermark,
+                            sourceDevice,
+                            Viewer!.PageCount,
+                            pdfSize,
+                            doc.Length,
+                            ipAddress);
+            if (response.Success)
+            {
+                await Viewer!.DownloadAsync();
+            }
+            else
+            {
+                snackbar.Add(response.ErrorMessage!, Severity.Error);
+            }
         }
     }
     private async void OnRestore(MouseEventArgs args)
@@ -297,12 +329,46 @@
                             {
                                 var transparency = (100 - watermarkTransparency) / 100;
                                 graphics.SetTransparency(transparency);
-                                graphics.DrawImage(
-                                    image,
-                                    horizontalMargin,
-                                    verticalMargin,
-                                    page.Graphics.ClientSize.Width - horizontalMargin * 2,
-                                    page.Graphics.ClientSize.Height - verticalMargin * 2);
+                                if (useOriginalImageSize && imageDimensions is not null)
+                                {
+                                    float width = 0;
+                                    float  height = 0;
+                                    if (page.Graphics.ClientSize.Width < imageDimensions.Width)
+                                    {
+                                        width = page.Graphics.ClientSize.Width;
+                                        horizontalMargin = 0;
+                                    }
+                                    else
+                                    {
+                                        width = imageDimensions.Width;
+                                        horizontalMargin = (int)((page.Graphics.ClientSize.Width - imageDimensions.Width) / 2);
+                                    }
+                                    if (page.Graphics.ClientSize.Height < imageDimensions.Height)
+                                    {
+                                        height = page.Graphics.ClientSize.Height;
+                                        verticalMargin = 0;
+                                    }
+                                    else
+                                    {
+                                        height = imageDimensions.Height;
+                                        verticalMargin = (int)((page.Graphics.ClientSize.Height - imageDimensions.Height) / 2);
+                                    }
+                                    graphics.DrawImage(
+                                        image,
+                                        horizontalMargin,
+                                        verticalMargin,
+                                        width,
+                                        height);
+                                }
+                                else
+                                {
+                                    graphics.DrawImage(
+                                        image,
+                                        horizontalMargin,
+                                        verticalMargin,
+                                        page.Graphics.ClientSize.Width - horizontalMargin * 2,
+                                        page.Graphics.ClientSize.Height - verticalMargin * 2);
+                                }
                             }
                         }
                     }
@@ -373,8 +439,12 @@
             CloseOnEscapeKey = false
         };
     }
-    private void onDocumentLoaded(LoadEventArgs args)
+    private async void onDocumentLoaded(LoadEventArgs args)
     {
+        if (downloadLimitReached)
+        {
+            await Viewer!.UnloadAsync();
+        }
         documentLoaded = true;
         EnableWatermarkButton();
     }
@@ -383,5 +453,10 @@
         watermarkApplied = false;
         documentLoaded = false;
         EnableWatermarkButton();
+    }
+    public class ImageDimensions
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
     }
 }

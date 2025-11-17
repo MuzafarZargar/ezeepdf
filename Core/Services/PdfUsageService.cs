@@ -86,7 +86,7 @@ namespace EzeePdf.Core.Services
                                                 pdfUsageRepository.GetThisIpAddressLastUsageTime);
                 if (code != EnumResponseCode.Success)
                 {
-                    errorMessage = $"Each feature can be used only one in {consecutiveTime} minutes";
+                    errorMessage = $"Each feature can be used only once in {consecutiveTime} minutes";
                 }
                 else
                 {
