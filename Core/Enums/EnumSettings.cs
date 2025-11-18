@@ -13,8 +13,7 @@
         MaxUploadPerDay = 8,
         WatermarkMaxImageSizeKB = 9,
         MaxPdfSizeMB = 10,
-        MaxPdfSizeMBPerDay = 11,
-        ConsecutiveUsageWait = 12,
-        ConsecutiveFeedbackWait = 13
+        ConsecutiveUsageWait = 11,
+        ConsecutiveFeedbackWait = 12
     }
 }

@@ -44,15 +44,14 @@ INSERT INTO LuSettings(SettingsId, [Name], [Value], [Description])
 VALUES (1, 'PublicPasswordExpiryInDays', '90', 'Number of days after which public users must change password'),
 	   (2, 'StaffPasswordExpiryInDays', '150', 'Number of days after which staff users must change password'),
 	   (3, 'LockAfterFailLoginAttempts', '3', 'Lock user after failing these many times'),
-	   (4, 'FreeVersionAllowedPageCount', '3', 'Limit pdf to these many pages in free version'),
+	   (4, 'FreeVersionAllowedPageCount', '2', 'Limit pdf to these many pages in free version'),
 	   (5, 'FreeVersionSaveCount', '1', 'How many times user can download updated file in free version'),
 	   (6, 'FreeVersionLockHours', '12', 'Numbers of hours to lock free functionality after reaching save limit'),
-	   (7, 'MaxPages', '100', 'Maximum number of pages in file'),
-	   (8, 'MaxUploadPerDay', '50', 'Maximum files that can be processed for each user in a day'),
+	   (7, 'MaxPages', '50', 'Maximum number of pages in file'),
+	   (8, 'MaxUploadPerDay', '100', 'Maximum files that can be processed for each user in a day'),
 	   (9, 'WatermarkMaxImageSizeKB', '50', 'Maximum size (KB) of watermark image that can be uploaded '),
-	   (10, 'MaxPdfSizeMB', '2', 'Maximum size (MB) of pdf that can be uploaded '),
-	   (11, 'MaxPdfSizeMBPerDay', '100', 'Maximum size (MB) of all pdfs that can be uploaded/downloaded in a day'),
-	   (12, 'ConsecutiveUsageWait', '10', 'Number of minutes to wait before using a feature again'),
-	   (13, 'ConsecutiveFeedbackWait', '30', 'Number of minutes to wait before submitting next feedback')
+	   (10, 'MaxPdfSizeMB', '1', 'Maximum size (MB) of pdf that can be uploaded '),
+	   (11, 'ConsecutiveUsageWait', '60', 'Number of minutes to wait before reusing a feature again'),
+	   (12, 'ConsecutiveFeedbackWait', '60', 'Number of minutes to wait before resubmitting next feedback')
 
 	   
