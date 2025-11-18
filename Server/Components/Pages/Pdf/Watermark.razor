@@ -233,7 +233,10 @@
                     imageDimensions = await jsRuntime.InvokeAsync<ImageDimensions>(
                           "getImageDimensions", selectedImageBase64);
                 }
-                catch { }
+                catch (Exception exception)
+                {
+                    await jsRuntime.InvokeVoidAsync("console.log", exception.Message);
+                }
             }
         }
         EnableWatermarkButton();
@@ -332,7 +335,7 @@
                                 if (useOriginalImageSize && imageDimensions is not null)
                                 {
                                     float width = 0;
-                                    float  height = 0;
+                                    float height = 0;
                                     if (page.Graphics.ClientSize.Width < imageDimensions.Width)
                                     {
                                         width = page.Graphics.ClientSize.Width;

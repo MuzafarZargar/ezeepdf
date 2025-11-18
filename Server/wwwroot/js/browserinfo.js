@@ -26,7 +26,6 @@ window.getImageDimensions = async (base64Data) => {
                 width: img.naturalWidth,
                 height: img.naturalHeight
             });
-            URL.revokeObjectURL(url);
         };
 
         img.onerror = (e) => reject(e);
