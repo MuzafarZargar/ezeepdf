@@ -28,6 +28,7 @@
         public const int FEEDBACK_MIN_LENGTH = 10;
         public const int FEEDBACK_MAX_LENGTH = 300;
         public const int CONSECUTIVE_FEATURE_USAGE_WAIT_MINUTES = 10;
+        public const int SIZE_DIFF_FOR_UPLOAD = 1024;
     }
     public class CacheConstants
     {

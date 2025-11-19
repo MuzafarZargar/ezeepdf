@@ -12,7 +12,7 @@ namespace EzeePdf.Core.Services
             long pdfSize,
             string? fileName,
             string? ipAddress);
-        Task<DataResponse> SaveUsage(int? userId,
+        Task<DataResponse> SaveUsage(string fileName, int? userId,
         EnumPdfFunction function,
         string? sourceDevice,
         int pageCount,

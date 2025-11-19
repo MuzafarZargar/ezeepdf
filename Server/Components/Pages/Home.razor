@@ -12,7 +12,7 @@
 <PageTitle>MzyDevs : Free PDF Watermark Tool | Online PDF Annotations</PageTitle>
 <meta name="description" content="Use our free PDF watermark tool and online PDF annotation service." />
 
-<MudPaper Class="d-flex justify-center align-center" Style="height:calc(100vh - 60px);background-color:#1e1e1e">
+<MudPaper Class="d-flex justify-center align-center" Style="background-color:#1e1e1e">
     <MudContainer MaxWidth="MaxWidth.Medium">
         <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6" Color="Color.Warning">
             <MudIcon Icon="@Icons.Material.TwoTone.PictureAsPdf" Color="Color.Warning" />
@@ -25,7 +25,7 @@
 
         <MudGrid Justify="Justify.Center">
             <!-- Annotation Feature -->
-            <MudItem xs="12" sm="6">
+            <MudItem xs="12" sm="11">
                 <MudCard Class="h-100">
                     <MudCardContent>
                         <MudText Typo="Typo.h6" Class="mb-2">
@@ -45,7 +45,7 @@
             </MudItem>
 
             <!-- Watermark Feature -->
-            <MudItem xs="12" sm="6">
+            <MudItem xs="12" sm="11">
                 <MudCard Class="h-100">
                     <MudCardContent>
                         <MudText Typo="Typo.h6" Class="mb-2">
@@ -64,8 +64,28 @@
                 </MudCard>
             </MudItem>
 
+            <!-- Image Edit Feature -->
+            <MudItem xs="12" sm="11">
+                <MudCard Class="h-100">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6" Class="mb-2">
+                            <MudIcon Size="Size.Small"
+                                     Icon="@Icons.Material.Sharp.Image" />&nbsp;&nbsp;Edit Image
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            Edit image, crop, rotate, draw with adjustable opacity.
+                        </MudText>
+                    </MudCardContent>
+                    <MudCardActions Class="justify-between">
+                        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="NavigateToEditImage">
+                            Try Now
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+
             <!-- Feedback Feature -->
-            <MudItem xs="12" sm="6">
+            <MudItem xs="12" sm="11">
                 <MudCard Class="h-100">
                     <MudCardContent>
                         <MudText Typo="Typo.h6" Class="mb-2">
@@ -85,7 +105,7 @@
             </MudItem>
 
             <!-- Limits -->
-            <MudItem xs="12" sm="6">
+            <MudItem xs="12" sm="11">
                 <MudCard Class="h-100">
                     <MudCardContent>
                         <MudText Typo="Typo.h6" Class="mb-2">
@@ -99,6 +119,7 @@
                                 <li>A PDF with a maximum of @maxPageCount pages can be uploaded</li>
                                 <li>A PDF with a maximum size of @maxPdfUploadLimit MB can be uploaded</li>
                                 <li>A Watermark with a maximum of @maxWatermarkUploadLimit KB can be uploaded</li>
+                                <li>An Image (for edit) with a maximum of @maxImageUploadLimit MB can be uploaded</li>
                             </ul>
                         </MudText>
                     </MudCardContent>
@@ -110,11 +131,12 @@
 
 @code {
     private int dailyPdfDownloadLimit;
-    private long maxPdfUploadLimit;
+    private string? maxPdfUploadLimit;
     private long maxWatermarkUploadLimit;
     private int consecutiveFeatureUsageLimit;
     private int consecutiveFeedbackUsageLimit;
     private int maxPageCount;
+    private string? maxImageUploadLimit;
 
     private void NavigateToEdit()
     {
@@ -124,6 +146,11 @@
     {
         navigationManager.NavigateTo("/pdf-tools/watermark");
     }
+    private void NavigateToEditImage()
+    {
+        navigationManager.NavigateTo("/img-tools/edit");
+    }
+
     private void NavigateToFeedback()
     {
         navigationManager.NavigateTo("/feedback");
@@ -135,8 +162,10 @@
     protected async override Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        var maxSize = await settingsService.PdfMaxPdfFileSize();
-        maxPdfUploadLimit = maxSize.BytesToMb();
+        var maxSize = await settingsService.PdfMaxFileSize();
+        maxPdfUploadLimit = maxSize.BytesToMbWithDecimal("#0.00");
+        maxSize = await settingsService.ImageMaxFileSize();
+        maxImageUploadLimit = maxSize.BytesToMbWithDecimal("#0.00");
         maxPageCount = await settingsService.MaxAllowedPageCount();
         dailyPdfDownloadLimit = await settingsService.PdfDailyLimit();
         consecutiveFeatureUsageLimit = await settingsService.PdfConsecutiveFeatureUsageWait();

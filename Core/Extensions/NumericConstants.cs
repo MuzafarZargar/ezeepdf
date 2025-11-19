@@ -5,7 +5,10 @@
         public static long BytesToKb(this long sizeInBytes) => (long)((float)sizeInBytes / 1024);
         public static long BytesToMb(this long sizeInBytes) => (long)((float)sizeInBytes / (1024 * 1024));
         public static double BytesToMbWithDecimal(this long sizeInBytes) => (double)sizeInBytes / (1024 * 1024);
+        public static string BytesToMbWithDecimal(this long sizeInBytes, string format) => ((double)sizeInBytes / (1024 * 1024)).ToString(format);
+        public static string BytesToMbWithDecimal(this int sizeInBytes, string format) => ((double)sizeInBytes / (1024 * 1024)).ToString(format);
         public static long KbToByte(this int sizeInKB) => sizeInKB * 1024;
         public static long MbToBytes(this int sizeInMB) => sizeInMB * 1024 * 1024;
+        public static long MbToBytes(this double sizeInMB) => (long)(sizeInMB * 1024 * 1024);
     }
 }

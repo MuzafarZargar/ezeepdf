@@ -33,3 +33,13 @@ window.getImageDimensions = async (base64Data) => {
         img.src = base64Data;
     });
 };
+
+window.disableImageEditorDrop = function () {
+    document.addEventListener('dragover', function (e) {
+        e.preventDefault();
+    });
+
+    document.addEventListener('drop', function (e) {
+        e.preventDefault();
+    });
+}

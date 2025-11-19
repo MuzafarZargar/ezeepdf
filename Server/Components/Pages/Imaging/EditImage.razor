@@ -1,0 +1,210 @@
+﻿@page "/img-tools/edit"
+@using EzeePdf.Core.Extensions
+@using EzeePdf.Core.Responses
+
+@rendermode InteractiveServer
+
+@inject ILogService logService
+@inject ISettingsService settingsService
+@inject IPdfUsageService pdfUsageService;
+@inject IJSRuntime jsRuntime
+@inject IDialogService DialogService
+@inject ISnackbar snackbar
+
+<PageTitle>Edit Image</PageTitle>
+
+<MudGrid>
+    <MudItem xs="1">
+        <MudPaper Class="pa-2" Style="height:calc(100vh - 70px); display: flex; flex-direction: column; align-items: center;">
+            <MudTooltip Text="Settings">
+                <MudIconButton Variant="Variant.Filled"
+                               Color="Color.Default"
+                               OnClick="OnSettings"
+                               Icon="@Icons.Material.Filled.Settings">
+                </MudIconButton>
+            </MudTooltip>
+            <br />
+            <MudTooltip Text="Download">
+                <MudIconButton Variant="Variant.Filled"
+                               Color="Color.Default"
+                               OnClick="OnSave"
+                               Disabled="@(documentLoaded==false || errorMessage is not null)"
+                               Icon="@Icons.Material.Filled.Download">
+                </MudIconButton>
+            </MudTooltip>
+
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="11">
+
+        <div class="loader-container">
+            <!-- Background Progress -->
+            <MudProgressCircular Indeterminate="true" Class="loader-bg" />
+            <!-- Foreground Control -->
+            <SfImageEditor @ref="ImageEditor">
+                <ImageEditorEvents Saving="OnSaving"
+                                   FileOpened="OnFileOpened" />
+            </SfImageEditor>
+        </div>
+    </MudItem>
+
+</MudGrid>
+
+
+<MudDialog @bind-Visible="settingVisible" Options="settingDialogOptions" Style="padding:10px;width:250px">
+    <TitleContent>
+        Settings
+    </TitleContent>
+    <DialogContent>
+        <MudTextField Label="File Name" @bind-Value="@saveFileName"></MudTextField>
+        <br />
+        <MudSelect Label="Format" @bind-Value="@saveFileType">
+            <MudSelectItem Value=0>PNG</MudSelectItem>
+            <MudSelectItem Value=1>JPEG</MudSelectItem>
+@*             <MudSelectItem Value=2>SVG</MudSelectItem>
+ *@
+            <MudSelectItem Value=3>WEBP</MudSelectItem>
+        </MudSelect>
+        <br />
+        @if (saveFileType == (int)ImageEditorFileType.JPEG)
+        {
+            <MudSlider Step="1" T="double" @bind-value="@saveFileQuality"
+                       Max=100 Variant="Variant.Filled"
+                       Color="Color.Info">Quality (@saveFileQuality)</MudSlider>
+        }
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="OnSettingsCancel">Cancel</MudButton>
+        <MudButton OnClick="OnSettingsSubmit">OK</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private SfImageEditor? ImageEditor;
+    private string? sourceDevice;
+    private long imageSize;
+    private long allowedImageSize;
+    private bool documentLoaded;
+    private string? errorMessage;
+    private bool downloadLimitReached;
+    private string? downloadLimitReachedPdfMessage = "Select Image";
+    private string? ipAddress;
+    private bool saveCancelled;
+    private DialogOptions? settingDialogOptions;
+    private bool settingVisible;
+    private string saveFileName = "EditedFile";
+    private int saveFileType = 0;
+    private double saveFileQuality = 50;
+    private bool customSaveCalled;
+    private string? originalFileName;
+
+    private async Task AddUpload(long size, string? fileName, DataResponse? response = null)
+    {
+        response ??= await pdfUsageService.AddUpload(null,
+                    Core.Enums.EnumPdfFunction.Watermark,
+                    sourceDevice,
+                    size,
+                    fileName,
+                    ipAddress);
+
+        if (response.Code == EnumResponseCode.DailyUploadLimitReached)
+        {
+            downloadLimitReached = true;
+            downloadLimitReachedPdfMessage = response.ErrorMessage;
+            snackbar.Add(downloadLimitReachedPdfMessage!, Severity.Error);
+            StateHasChanged();
+        }
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            allowedImageSize = await settingsService.ImageMaxFileSize();
+            sourceDevice = await jsRuntime.InvokeAsync<string>("eval", "navigator.userAgent");
+            var downloadReached = await pdfUsageService.DailyLimitReached();
+            if (downloadReached.Code == EnumResponseCode.DailyUploadLimitReached)
+            {
+                downloadLimitReached = true;
+                downloadLimitReachedPdfMessage = downloadReached.ErrorMessage;
+                snackbar.Add(downloadLimitReachedPdfMessage!, Severity.Error);
+                StateHasChanged();
+            }
+            try
+            {
+                ipAddress = await jsRuntime.InvokeAsync<string>("getPublicIp");
+                StateHasChanged();
+            }
+            catch
+            {
+            }
+        }
+    }
+
+    private async void OnSave()
+    {
+        customSaveCalled = true;
+        var data = await ImageEditor!.GetImageDataAsync();
+        var response = await pdfUsageService.SaveUsage(
+                        originalFileName ?? "pic.png",
+                        null,
+                        Core.Enums.EnumPdfFunction.ImageEdit,
+                        sourceDevice,
+                        1,
+                        imageSize,
+                        data.Length,
+                        ipAddress);
+        if (!response.Success)
+        {
+            snackbar.Add(response.ErrorMessage!, Severity.Error);
+        }
+        else
+        {
+            await ImageEditor!.ExportAsync(saveFileName, (ImageEditorFileType)saveFileType, saveFileQuality / 100);
+            await AddUpload(0, string.Empty, response);
+        }
+    }
+    private void OnPrintStart(PrintStartEventArgs args)
+    {
+        args.Cancel = true;
+    }
+    private void OnSaving(SaveEventArgs args)
+    {
+        args.Cancel = !customSaveCalled;
+        customSaveCalled = false;
+    }
+    private async void OnFileOpened(FileOpenEventArgs args)
+    {
+        originalFileName = args.FileName;
+        var bytesData = await ImageEditor!.GetImageDataAsync();
+        await AddUpload(bytesData.Length, args.FileName);
+        errorMessage = null;
+        documentLoaded = true;
+        if (bytesData.Length > allowedImageSize)
+        {
+            errorMessage = $"Image file size ({bytesData.Length.BytesToMbWithDecimal("#0.00")} MB) exceeded allowed value: {allowedImageSize.BytesToMbWithDecimal("#0.00")} MB";
+            snackbar.Add(errorMessage, Severity.Error);
+            await ImageEditor!.ClearImageAsync();
+            documentLoaded = false;
+        }
+        else
+        {
+            imageSize = bytesData.Length;
+        }
+    }
+    private void OnSettings(MouseEventArgs args)
+    {
+        settingVisible = true;
+    }
+    private void OnSettingsSubmit(MouseEventArgs args)
+    {
+        settingVisible = false;
+    }
+    private void OnSettingsCancel(MouseEventArgs args)
+    {
+        settingVisible = false;
+    }
+}

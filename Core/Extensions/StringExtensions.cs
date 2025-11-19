@@ -29,6 +29,10 @@ namespace EzeePdf.Core.Extensions
         {
             return Utils.ParseInt(value, defaultValue);
         }
+        public static double Double (this string? value, double defaultValue = 0)
+        {
+            return Utils.ParseDouble(value, defaultValue);
+        }
         public static string AsJsonString(this object? value, bool toBase64 = false)
         {
             string json = string.Empty;

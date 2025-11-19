@@ -68,6 +68,7 @@ namespace EzeePdf.Core.Services
             return await DailyLimitReached();
         }
         public async Task<DataResponse> SaveUsage(
+            string fileName,
             int? userId,
             EnumPdfFunction function,
             string? sourceDevice,
@@ -84,6 +85,7 @@ namespace EzeePdf.Core.Services
 
                 code = await Utils.BlockForTime(userSessionService, ipAddress, function, consecutiveTime,
                                                 pdfUsageRepository.GetThisIpAddressLastUsageTime);
+
                 if (code != EnumResponseCode.Success)
                 {
                     errorMessage = $"Each feature can be used only once in {consecutiveTime} minutes";
@@ -102,6 +104,9 @@ namespace EzeePdf.Core.Services
                     };
 
                     await pdfUsageRepository.AddUsage(usage);
+
+                    var uploadResponse = await AddUpload(userId, function, sourceDevice, pdfChangedSize, $"{fileName} (downloaded)", ipAddress);
+                    code = uploadResponse.Code;
                 }
             }
             catch (Exception exception)

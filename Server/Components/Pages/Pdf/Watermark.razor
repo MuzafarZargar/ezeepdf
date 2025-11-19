@@ -172,19 +172,21 @@
     private int verticalMargin = 0;
     private int horizontalMargin = 0;
     private bool useOriginalImageSize;
-    string? ipAddress;
+    private string? originalFileName;
+    private string? ipAddress;
 
     DialogOptions? settingDialogOptions;
 
     private async Task OnPdfFileSelected(IBrowserFile e)
     {
+        originalFileName = e.Name;
         await AddUpload(e.Size, e.Name);
 
         await Viewer!.UnloadAsync();
         errorMessage = null;
         if (e.Size > allowedPdfSize)
         {
-            errorMessage = $"Pdf file size ({e.Size.BytesToMb()} KB) exceeded allowed value: {allowedPdfSize.BytesToMb()} MB";
+            errorMessage = $"Pdf file size ({e.Size.BytesToMbWithDecimal("#0")} MB) exceeded allowed value: {allowedPdfSize.BytesToMbWithDecimal("#0")} MB";
             snackbar.Add(errorMessage, Severity.Error);
             await Viewer!.UnloadAsync();
         }
@@ -241,15 +243,14 @@
         }
         EnableWatermarkButton();
     }
-    private async Task AddUpload(long size, string? fileName)
+    private async Task AddUpload(long size, string? fileName, DataResponse? response = null)
     {
-        var response = await pdfUsageService.AddUpload(null,
+        response ??= await pdfUsageService.AddUpload(null,
                     Core.Enums.EnumPdfFunction.Watermark,
                     sourceDevice,
                     size,
                     fileName,
                     ipAddress);
-
         if (response.Code == EnumResponseCode.DailyUploadLimitReached)
         {
             downloadLimitReached = true;
@@ -272,7 +273,7 @@
         }
         else
         {
-            var response = await pdfUsageService.SaveUsage(null,
+            var response = await pdfUsageService.SaveUsage(originalFileName ?? "watermark.pdf", null,
                             Core.Enums.EnumPdfFunction.Watermark,
                             sourceDevice,
                             Viewer!.PageCount,
@@ -282,6 +283,7 @@
             if (response.Success)
             {
                 await Viewer!.DownloadAsync();
+                await AddUpload(0, string.Empty, response);
             }
             else
             {
@@ -410,7 +412,7 @@
         await base.OnAfterRenderAsync(firstRender);
         if (firstRender)
         {
-            allowedPdfSize = await settingsService.PdfMaxPdfFileSize();
+            allowedPdfSize = await settingsService.PdfMaxFileSize();
             allowedImageSize = await settingsService.WatermarkImageMaxSize();
             allowedPageCount = await settingsService.MaxAllowedPageCount();
             sourceDevice = await jsRuntime.InvokeAsync<string>("eval", "navigator.userAgent");

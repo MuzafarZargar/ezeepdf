@@ -83,7 +83,7 @@ namespace EzeePdf.Core
             }
             return defaultValue;
         }
-        public static double ParseDouble(object value, double defaultValue = 0)
+        public static double ParseDouble(object? value, double defaultValue = 0)
         {
             if (value != null && double.TryParse(value.ToString(), out var v))
             {

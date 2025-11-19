@@ -9,7 +9,8 @@
         Editing = 4,
         Merge = 5,
         Split = 6,
-        HtmlToPdf = 7
+        HtmlToPdf = 7,
+        ImageEdit = 8
     }
 
 }

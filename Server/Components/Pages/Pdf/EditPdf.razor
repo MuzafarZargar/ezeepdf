@@ -52,7 +52,7 @@
                           EnablePrint="false"
                           EnableFormDesigner="false"
                           EnableDownload="@documentLoaded"
-                          DownloadFileName="newfile.pdf"
+                          DownloadFileName="annotations.pdf"
                           Height="100%"
                           Width="100%">
                 <PdfViewerEvents DocumentLoaded="DocumentLoaded"
@@ -67,7 +67,6 @@
 
 </MudGrid>
 
-
 @code {
     private SfPdfViewer2? Viewer;
     private string? sourceDevice;
@@ -81,7 +80,7 @@
     private string? ipAddress;
     private bool customUploadCalled;
     private bool customSaveCalled;
-
+    private string? originalFileName;
     private List<AllowedInteraction> underlineAllowedInteractions = [
             AllowedInteraction.Select,
             AllowedInteraction.Move,
@@ -93,6 +92,7 @@
     {
         customUploadCalled = true;
 
+        originalFileName = e.Name;
         await AddUpload(e.Size, e.Name);
 
         await Viewer!.UnloadAsync();
@@ -100,7 +100,7 @@
         documentLoaded = false;
         if (e.Size > allowedPdfSize)
         {
-            errorMessage = $"Pdf file size ({e.Size.BytesToMb()} KB) exceeded allowed value: {allowedPdfSize.BytesToMb()} MB";
+            errorMessage = $"Pdf file size ({e.Size.BytesToMbWithDecimal("#0")} MB) exceeded allowed value: {allowedPdfSize.BytesToMbWithDecimal("#0")} MB";
             snackbar.Add(errorMessage, Severity.Error);
             await Viewer!.UnloadAsync();
         }
@@ -114,9 +114,9 @@
             await Viewer!.LoadAsync(bytes);
         }
     }
-    private async Task AddUpload(long size, string? fileName)
+    private async Task AddUpload(long size, string? fileName, DataResponse? response = null)
     {
-        var response = await pdfUsageService.AddUpload(null,
+        response ??= await pdfUsageService.AddUpload(null,
                     Core.Enums.EnumPdfFunction.Watermark,
                     sourceDevice,
                     size,
@@ -140,7 +140,7 @@
         }
         else
         {
-            var response = await pdfUsageService.SaveUsage(null,
+            var response = await pdfUsageService.SaveUsage(originalFileName ?? "annotations.pdf", null,
                             Core.Enums.EnumPdfFunction.Editing,
                             sourceDevice,
                             Viewer!.PageCount,
@@ -151,6 +151,7 @@
             {
                 customSaveCalled = true;
                 await Viewer!.DownloadAsync();
+                await AddUpload(0, string.Empty, response);
             }
             else
             {
@@ -204,7 +205,7 @@
         await base.OnAfterRenderAsync(firstRender);
         if (firstRender)
         {
-            allowedPdfSize = await settingsService.PdfMaxPdfFileSize();
+            allowedPdfSize = await settingsService.PdfMaxFileSize();
             allowedPageCount = await settingsService.MaxAllowedPageCount();
             sourceDevice = await jsRuntime.InvokeAsync<string>("eval", "navigator.userAgent");
             var downloadReached = await pdfUsageService.DailyLimitReached();

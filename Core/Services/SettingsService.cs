@@ -26,6 +26,12 @@ namespace EzeePdf.Core.Services
             var value = settings.FirstOrDefault(x => x.Id == setting.Value());
             return value?.Value.Int(defaultValue) ?? defaultValue;
         }
+        public async Task<double> GetDouble(EnumSettings setting, double defaultValue = 0)
+        {
+            var settings = await CacheSettings();
+            var value = settings.FirstOrDefault(x => x.Id == setting.Value());
+            return value?.Value.Double(defaultValue) ?? defaultValue;
+        }
         public async Task<int> MaxAllowedPageCount()
         {
             //if (await resolver.Get<IUserService>().IsUserLoggedIn())
@@ -46,9 +52,14 @@ namespace EzeePdf.Core.Services
         {
             return await GetInt(EnumSettings.ConsecutiveFeedbackWait, Constants.CONSECUTIVE_FEATURE_USAGE_WAIT_MINUTES);
         }
-        public async Task<long> PdfMaxPdfFileSize()
+        public async Task<long> PdfMaxFileSize()
         {
             var size = await GetInt(EnumSettings.MaxPdfSizeMB, Constants.PDF_MAX_UPLOAD_SIZE_MB);
+            return size.MbToBytes();
+        }
+        public async Task<long> ImageMaxFileSize()
+        {
+            var size = await GetDouble(EnumSettings.MaxEditImageSizeMB, Constants.PDF_MAX_UPLOAD_SIZE_MB);
             return size.MbToBytes();
         }
         public async Task<long> WatermarkImageMaxSize()

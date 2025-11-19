@@ -80,17 +80,17 @@ h1:focus {
     transition: color 0.2s ease-in-out;
 }
 
-/* Hover effect */
-.nav-link:hover {
-    color: #e0e0e0;
-}
+    /* Hover effect */
+    .nav-link:hover {
+        color: #e0e0e0;
+    }
 
-/* Active link (current page) */
-.nav-link.active {
-    color: #ffffff;
-    font-weight: 600;
-    border-bottom: 2px solid #ffffff;
-}
+    /* Active link (current page) */
+    .nav-link.active {
+        color: #ffffff;
+        font-weight: 600;
+        border-bottom: 2px solid #ffffff;
+    }
 
 .nav-link-small {
     color: yellow;
@@ -99,16 +99,16 @@ h1:focus {
     text-decoration: none;
 }
 
-/* Hover effect */
-.nav-link-small:hover {
-    color: #e0e0e0;
-}
+    /* Hover effect */
+    .nav-link-small:hover {
+        color: #e0e0e0;
+    }
 
-/* Active link (current page) */
-.nav-link-small.active {
-    color: #ffffff;
-    font-weight: 200;
-}
+    /* Active link (current page) */
+    .nav-link-small.active {
+        color: #ffffff;
+        font-weight: 200;
+    }
 
 .menu-icon-link-small {
     padding-left: 0 !important;
@@ -130,7 +130,6 @@ h1:focus {
 .e-pv-submit-form-container {
     display: none !important;
 }
-
 
 .e-pv-open-document-container,
 .e-pv-mobile-toolbar .e-pv-open-document-container,
@@ -171,6 +170,15 @@ h1:focus {
 .e-pv-mobile-toolbar .e-pv-print-document-container,
 .e-pv-print-document-item,
 .e-pv-print-document {
+    display: none !important;
+}
+
+.e-image-editor-toolbar .e-save 
+{
+    display: none !important;
+}
+
+.e-image-editor .e-dropdown-popup .e-save {
     display: none !important;
 }
 

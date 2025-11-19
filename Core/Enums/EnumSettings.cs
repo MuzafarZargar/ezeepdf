@@ -14,6 +14,7 @@
         WatermarkMaxImageSizeKB = 9,
         MaxPdfSizeMB = 10,
         ConsecutiveUsageWait = 11,
-        ConsecutiveFeedbackWait = 12
+        ConsecutiveFeedbackWait = 12,
+        MaxEditImageSizeMB = 13
     }
 }
