@@ -173,12 +173,13 @@ h1:focus {
     display: none !important;
 }
 
-.e-image-editor-toolbar .e-save 
-{
+/* Hide the Save button */
+.e-image-editor .e-toolbar-item[title="Save"] {
     display: none !important;
 }
 
-.e-image-editor .e-dropdown-popup .e-save {
+/* Hide the Download button */
+.e-image-editor .e-toolbar-item[title="Download"] {
     display: none !important;
 }
 
