@@ -12,7 +12,7 @@
 @inject ISnackbar snackbar
 
 <PageTitle>Image Editing</PageTitle>
-<meta name="description" content="Image Editing: Convert, Crop, Rotate, Draw" />
+<meta name="description" content="Image Editing: Convert, Crop, Rotate, Draw, Contrast, Brightness, Hue, Saturation, Opacity, Blur" />
 
 <MudGrid>
     <MudItem xs="1">
@@ -195,6 +195,7 @@
         {
             imageSize = bytesData.Length;
         }
+        StateHasChanged();
     }
     private void OnSettings(MouseEventArgs args)
     {

@@ -62,7 +62,7 @@ namespace EzeePdf.Core.Services
             }
             catch (Exception exception)
             {
-                logService.Error($"Error while saving pdf usage ({function})", exception);
+                logService.Error($"Error while saving upload ({function})", exception);
             }
 
             return await DailyLimitReached();

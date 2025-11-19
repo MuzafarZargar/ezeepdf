@@ -124,7 +124,7 @@ namespace EzeePdf.Core.Responses
         [Description("File page exceeded (Max Number={0})")]
         FilePageCountExceed = 165,
 
-        [Description("Error saving pdf usage")]
+        [Description("Error saving pdf/image data")]
         UsageSaveError = 170,
 
         [Description("Error saving feedback")]

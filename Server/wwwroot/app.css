@@ -123,11 +123,13 @@ h1:focus {
     align-items: center !important;
 }
 
+
 .e-pv-open-document-container,
 .e-pv-download-document-container,
 .e-pv-print-document-container,
 .e-pv-formdesigner-container,
-.e-pv-submit-form-container {
+.e-pv-submit-form-container,
+.e-pv-signature {
     display: none !important;
 }
 
@@ -207,3 +209,11 @@ h1:focus {
 .switch-left {
     justify-content: flex-start !important;
 }
+
+/*.bg-img {
+    background: url("/images/background.png");
+    opacity: 0.3;
+    background-repeat: repeat;*/ /* tile horizontally + vertically */
+    /*background-size: auto;*/ /* keep original small size */
+    /*background-position: top left;*/ /* start from top-left */
+/*}*/
