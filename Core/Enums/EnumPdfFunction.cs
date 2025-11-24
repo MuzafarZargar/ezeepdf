@@ -10,7 +10,8 @@
         Merge = 5,
         Split = 6,
         HtmlToPdf = 7,
-        ImageEdit = 8
+        ImageEdit = 8,
+        PptToPdf = 9,
     }
 
 }

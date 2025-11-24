@@ -14,5 +14,6 @@ namespace EzeePdf.Core.Services
         Task<long> PdfMaxFileSize();
         Task<long> ImageMaxFileSize();
         Task<long> WatermarkImageMaxSize();
+        Task<long> PPTMaxFileSize();
     }
 }

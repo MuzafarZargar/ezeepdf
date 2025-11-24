@@ -112,8 +112,8 @@
                           DownloadFileName="watermark.pdf"
                           Height="100%"
                           Width="100%">
-                <PdfViewerEvents DocumentLoaded="onDocumentLoaded"
-                                 DocumentUnloaded="onDocumentUnloaded">
+                <PdfViewerEvents DocumentLoaded="OnDocumentLoaded"
+                                 DocumentUnloaded="OnDocumentUnloaded">
                 </PdfViewerEvents>
             </SfPdfViewer2>
         </div>
@@ -445,16 +445,19 @@
             CloseOnEscapeKey = false
         };
     }
-    private async void onDocumentLoaded(LoadEventArgs args)
+    private async void OnDocumentLoaded(LoadEventArgs args)
     {
         if (downloadLimitReached)
         {
             await Viewer!.UnloadAsync();
         }
-        documentLoaded = true;
+        else
+        {
+            documentLoaded = true;
+        }
         EnableWatermarkButton();
     }
-    private void onDocumentUnloaded(UnloadEventArgs args)
+    private void OnDocumentUnloaded(UnloadEventArgs args)
     {
         watermarkApplied = false;
         documentLoaded = false;

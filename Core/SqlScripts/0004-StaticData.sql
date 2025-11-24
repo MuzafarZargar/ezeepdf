@@ -27,7 +27,8 @@ VALUES (1, 'Watermark', 'Watermark', 1),
 	   (5, 'Merge', 'Merge multiple PDFs', 0),
 	   (6, 'Split', 'Split PDF into page ranges', 0),
 	   (7, 'HtmltoPdf', 'Converts HTML into Pdf format', 0),
-	   (8, 'EditImage', 'Allows editing features for an image', 1)
+	   (8, 'EditImage', 'Allows editing features for an image', 1),
+	   (9, 'PptToPdf', 'Allows conversion of a PowerPoint presentation into PDF', 1)
 
 --Transaction Status
 INSERT INTO LuTransactionStatus(TransactionStatusId, [Name])
@@ -54,6 +55,7 @@ VALUES (1, 'PublicPasswordExpiryInDays', '90', 'Number of days after which publi
 	   (10, 'MaxPdfSizeMB', '1', 'Maximum size (MB) of pdf that can be uploaded'),
 	   (11, 'ConsecutiveUsageWait', '60', 'Number of minutes to wait before reusing a feature again'),
 	   (12, 'ConsecutiveFeedbackWait', '60', 'Number of minutes to wait before resubmitting next feedback'),
-	   (13, 'MaxEditImageSizeMB', '0.5', 'Maximum size (MB) of image that can be uploaded')
+	   (13, 'MaxEditImageSizeMB', '0.5', 'Maximum size (MB) of image that can be uploaded'),
+	   (14, 'MaxPPTSizeMB', '0.5', 'Maximum size (MB) of PowerPoint presenation that can be uploaded')
 
 	   

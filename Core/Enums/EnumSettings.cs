@@ -15,6 +15,7 @@
         MaxPdfSizeMB = 10,
         ConsecutiveUsageWait = 11,
         ConsecutiveFeedbackWait = 12,
-        MaxEditImageSizeMB = 13
+        MaxEditImageSizeMB = 13,
+        MaxPPTSizeMB = 14
     }
 }

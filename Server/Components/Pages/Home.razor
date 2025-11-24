@@ -89,6 +89,26 @@
                 </MudCard>
             </MudItem>
 
+            <!-- PowerPoint to PDF Feature -->
+            <MudItem xs="12" sm="11">
+                <MudCard Class="h-100">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6" Class="mb-2">
+                            <MudIcon Size="Size.Small"
+                                     Icon="@Icons.Material.Sharp.Assignment" />&nbsp;&nbsp;PowerPoint to PDF
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            Convert a PowerPoint presentation into a PDF.
+                        </MudText>
+                    </MudCardContent>
+                    <MudCardActions Class="justify-between">
+                        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="NavigateToPowerPoint">
+                            Try Now
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+
             <!-- Feedback Feature -->
             <MudItem xs="12" sm="11">
                 <MudCard Class="h-100">
@@ -154,6 +174,10 @@
     private void NavigateToEditImage()
     {
         navigationManager.NavigateTo("/img-tools/edit");
+    }
+    private void NavigateToPowerPoint()
+    {
+        navigationManager.NavigateTo("/pdf-tools/ppt2pdf");
     }
 
     private void NavigateToFeedback()

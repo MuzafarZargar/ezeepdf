@@ -29,6 +29,8 @@
         public const int FEEDBACK_MAX_LENGTH = 300;
         public const int CONSECUTIVE_FEATURE_USAGE_WAIT_MINUTES = 10;
         public const int SIZE_DIFF_FOR_UPLOAD = 1024;
+        public const int IMAGE_MAX_EDIT_SIZE_MB = 1;
+        public const int PPT_MAX_SIZE_MB = 1;
     }
     public class CacheConstants
     {

@@ -59,7 +59,12 @@ namespace EzeePdf.Core.Services
         }
         public async Task<long> ImageMaxFileSize()
         {
-            var size = await GetDouble(EnumSettings.MaxEditImageSizeMB, Constants.PDF_MAX_UPLOAD_SIZE_MB);
+            var size = await GetDouble(EnumSettings.MaxEditImageSizeMB, Constants.IMAGE_MAX_EDIT_SIZE_MB);
+            return size.MbToBytes();
+        }
+        public async Task<long> PPTMaxFileSize()
+        {
+            var size = await GetDouble(EnumSettings.MaxPPTSizeMB, Constants.PPT_MAX_SIZE_MB);
             return size.MbToBytes();
         }
         public async Task<long> WatermarkImageMaxSize()
